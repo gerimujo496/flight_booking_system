@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,7 +6,8 @@ import { User } from './entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreditService } from 'src/credit/credit.service';
 import { Credit } from 'src/credit/entities/credit.entity';
-import { error } from 'src/constants/errorMessages';
+import { errorMessage } from 'src/constants/errorMessages';
+import { throwError } from 'src/constants/throwError';
 
 @Injectable()
 export class UserService {
@@ -17,72 +18,128 @@ export class UserService {
   ) {}
 
   async findByEmail(email: string) {
-    const user: User = await this.userRepo.findOne({ where: { email } });
+    try {
+      const user: User = await this.userRepo.findOne({ where: { email } });
 
-    return user;
+      return user;
+    } catch (error) {
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`finding`, `user`),
+      );
+    }
   }
 
   async createUser(createUserDto: CreateUserDto) {
-    const { firstName, lastName, email, password, country, credits } =
-      createUserDto;
+    try {
+      const { firstName, lastName, email, password, country, credits } =
+        createUserDto;
 
-    const newUser = this.userRepo.create({
-      firstName,
-      lastName,
-      email,
-      password,
-      country,
-    });
+      const newUser = this.userRepo.create({
+        firstName,
+        lastName,
+        email,
+        password,
+        country,
+      });
 
-    const createdUser = await this.userRepo.save(newUser);
-    await this.creditService.create({
-      userId: createdUser,
-      credits,
-    });
-    return this.findOne(createdUser.id);
+      const createdUser = await this.userRepo.save(newUser);
+      await this.creditService.create({
+        userId: createdUser,
+        credits,
+      });
+      return this.findOne(createdUser.id);
+    } catch (error) {
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`creating`, `user`),
+      );
+    }
   }
 
   async findAll() {
-    const users = await this.dataSource
-      .getRepository(Credit)
-      .createQueryBuilder('credit')
-      .leftJoinAndSelect('credit.userId', 'user')
-      .getMany();
+    try {
+      const users = await this.dataSource
+        .getRepository(Credit)
+        .createQueryBuilder('credit')
+        .leftJoinAndSelect('credit.userId', 'user')
+        .getMany();
 
-    return users;
+      return users;
+    } catch (error) {
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`getting`, `users`),
+      );
+    }
   }
 
   async findOne(id: number) {
-    const user = await this.dataSource
-      .getRepository(Credit)
-      .createQueryBuilder('credit')
-      .leftJoinAndSelect('credit.userId', 'user')
-      .where('credit.userId = :id', { id })
-      .getOne();
+    try {
+      const user = await this.dataSource
+        .getRepository(Credit)
+        .createQueryBuilder('credit')
+        .leftJoinAndSelect('credit.userId', 'user')
+        .where('credit.userId = :id', { id })
+        .getOne();
 
-    if (!user) throw new NotFoundException(error.NOT_FOUND('user'));
-    return user;
+      if (!user) {
+        throw new NotFoundException(errorMessage.NOT_FOUND(`user`));
+      }
+
+      return user;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throwError(HttpStatus.NOT_FOUND, error.message);
+      }
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`finding`, `user`),
+      );
+    }
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const updateResult = await this.userRepo.update(id, updateUserDto);
-    if (!updateResult.affected) {
-      throw new NotFoundException(`The user not found`);
+    try {
+      const updateResult = await this.userRepo.update(id, updateUserDto);
+      if (!updateResult.affected) {
+        throw new NotFoundException(`The user not found`);
+      }
+
+      const updatedUser = await this.findOne(id);
+
+      return updatedUser;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throwError(HttpStatus.NOT_FOUND, error.message);
+      }
+
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`updating`, `user`),
+      );
     }
-
-    const updatedUser = await this.findOne(id);
-
-    return updatedUser;
   }
 
   async remove(id: number) {
-    const user = await this.userRepo.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(error.NOT_FOUND('user'));
-    }
-    const returnedObject = await this.findOne(id);
-    await this.userRepo.remove(user);
+    try {
+      const user = await this.userRepo.findOne({ where: { id } });
+      if (!user) {
+        throw new NotFoundException(errorMessage.NOT_FOUND('user'));
+      }
+      const returnedObject = await this.findOne(id);
+      await this.userRepo.remove(user);
 
-    return returnedObject;
+      return returnedObject;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throwError(HttpStatus.NOT_FOUND, error.message);
+      }
+
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`removing`, `user`),
+      );
+    }
   }
 }

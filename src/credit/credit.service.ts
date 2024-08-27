@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,7 +9,8 @@ import { UpdateCreditDto } from './dto/update-credit.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Credit } from './entities/credit.entity';
 import { Repository } from 'typeorm';
-import { error } from 'src/constants/errorMessages';
+import { errorMessage } from 'src/constants/errorMessages';
+import { throwError } from 'src/constants/throwError';
 
 @Injectable()
 export class CreditService {
@@ -17,46 +19,97 @@ export class CreditService {
   ) {}
 
   async create(createCreditDto: CreateCreditDto) {
-    const { userId, credits } = createCreditDto;
-    const creditInstance = await this.creditRepo.create({ userId, credits });
+    try {
+      const { userId, credits } = createCreditDto;
+      const creditInstance = await this.creditRepo.create({ userId, credits });
 
-    return await this.creditRepo.save(creditInstance);
+      return await this.creditRepo.save(creditInstance);
+    } catch (error) {
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`create`, `credit`),
+      );
+    }
   }
 
   async findOne(id: number) {
-    const credit = await this.creditRepo.findOne({ where: { id } });
-    if (!credit)
-      throw new NotFoundException(error.NOT_FOUND(`credit`, `id`, `${id}`));
+    try {
+      const credit = await this.creditRepo.findOne({ where: { id } });
+      if (!credit)
+        throw new NotFoundException(
+          errorMessage.NOT_FOUND(`credit`, `id`, `${id}`),
+        );
 
-    return credit;
+      return credit;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throwError(HttpStatus.NOT_FOUND, error.message);
+      }
+
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`finding`, `credit`),
+      );
+    }
   }
 
   async removeCredits(id: number, value: number) {
-    const credit = await this.findOne(id);
+    try {
+      const credit = await this.findOne(id);
 
-    if (credit.credits < value)
-      throw new ForbiddenException(error.BALANCE_NOT_ENOUGH);
+      if (credit.credits < value)
+        throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH);
 
-    const updateBody: UpdateCreditDto = { credits: value - credit.credits };
+      const updateBody: UpdateCreditDto = { credits: value - credit.credits };
 
-    return await this.update(id, updateBody);
+      return await this.update(id, updateBody);
+    } catch (error) {
+      if (error instanceof ForbiddenException) {
+        throwError(HttpStatus.FORBIDDEN, error.message);
+      }
+
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`finding`, `credit`),
+      );
+    }
   }
 
   async addCredits(id: number, value: number) {
-    const credit = await this.findOne(id);
+    try {
+      const credit = await this.findOne(id);
 
-    const updateBody: UpdateCreditDto = { credits: value + credit.credits };
+      const updateBody: UpdateCreditDto = { credits: value + credit.credits };
 
-    return await this.update(id, updateBody);
+      return await this.update(id, updateBody);
+    } catch (error) {
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`adding`, `credits`),
+      );
+    }
   }
 
   async update(id: number, updateCreditDto: UpdateCreditDto) {
-    const updateResult = await this.creditRepo.update(id, updateCreditDto);
+    try {
+      const updateResult = await this.creditRepo.update(id, updateCreditDto);
 
-    if (!updateResult.affected) {
-      throw new NotFoundException(error.NOT_FOUND(`credit`, `id`, `${id}`));
+      if (!updateResult.affected) {
+        throw new NotFoundException(
+          errorMessage.NOT_FOUND(`credit`, `id`, `${id}`),
+        );
+      }
+
+      return await this.findOne(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throwError(HttpStatus.NOT_FOUND, error.message);
+      }
+
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`updating`, `credits`),
+      );
     }
-
-    return await this.findOne(id);
   }
 }

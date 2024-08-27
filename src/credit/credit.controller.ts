@@ -1,4 +1,11 @@
-import { Controller, Body, Patch, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Body,
+  Patch,
+  Param,
+  ParseIntPipe,
+  Get,
+} from '@nestjs/common';
 import { CreditService } from './credit.service';
 import { UpdateCreditDto } from './dto/update-credit.dto';
 
@@ -12,5 +19,13 @@ export class CreditController {
     @Body() updateCreditDto: UpdateCreditDto,
   ) {
     return this.creditService.update(id, updateCreditDto);
+  }
+
+  @Get(':id')
+  get(
+    @Param('id', ParseIntPipe) id: number,
+    // @Body() updateCreditDto: UpdateCreditDto,
+  ) {
+    return this.creditService.findOne(id);
   }
 }
