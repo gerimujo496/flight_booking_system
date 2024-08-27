@@ -10,8 +10,8 @@ export class AdminOrEntityOwnerGuard implements CanActivate {
     if (!request.currentUser) {
       return false;
     }
-    const currentUser = request.currentUser;
-    if (currentUser.isAdmin) return currentUser.isAdmin;
+    const { id, isAdmin } = request.currentUser;
+    if (isAdmin) return true;
 
     const paths: string[] = request.path.split('/');
     if (paths.length < 2) return false;
@@ -19,7 +19,7 @@ export class AdminOrEntityOwnerGuard implements CanActivate {
     const path = paths[1];
     const requestId = paths[2];
 
-    if (path === `user` && requestId == currentUser.id) return true;
+    if (path === `user` && requestId == id) return true;
 
     return false;
   }
