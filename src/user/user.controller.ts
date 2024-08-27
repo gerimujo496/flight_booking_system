@@ -7,18 +7,25 @@ import {
   Delete,
   ParseIntPipe,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { SerializerInterceptor } from 'src/iterceptors/serialize.interceptors';
 import { UserDto } from './dto/user.dto';
+import { AdminGuard } from 'src/guards/admin.guard';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { AdminOrEntityOwnerGuard } from 'src/guards/adminOrEntityOwner.guard';
 
 @Controller('user')
+@UseGuards(AuthGuard)
+@UseGuards(AdminOrEntityOwnerGuard)
 @UseInterceptors(new SerializerInterceptor(UserDto))
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
+  @UseGuards(AdminGuard)
   findAll() {
     return this.userService.findAll();
   }
