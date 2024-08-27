@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module';
 import { DatabaseModule } from './database/database.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CreditModule } from './credit/credit.module';
+import { AirplaneModule } from './airplane/airplane.module';
 
 import cookieSession = require('cookie-session');
 
@@ -16,6 +17,7 @@ import cookieSession = require('cookie-session');
     UserModule,
     DatabaseModule,
     CreditModule,
+    AirplaneModule,
   ],
   controllers: [AppController],
   providers: [AppService],
