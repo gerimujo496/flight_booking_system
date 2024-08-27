@@ -8,7 +8,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { Country } from '../types/country';
+import { Country } from '../../types/country';
 
 export class CreateUserDto {
   @IsString()
