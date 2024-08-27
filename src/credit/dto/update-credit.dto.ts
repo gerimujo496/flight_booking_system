@@ -1,4 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateCreditDto } from './create-credit.dto';
+import { IsNumber, Min } from 'class-validator';
 
-export class UpdateCreditDto extends PartialType(CreateCreditDto) {}
+export class UpdateCreditDto {
+  @IsNumber()
+  @Min(0)
+  credits: number;
+}

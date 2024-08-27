@@ -48,7 +48,7 @@ export class CreditService {
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`finding`, `credit`),
+        errorMessage.INTERNAL_SERVER_ERROR(`find`, `credit`),
       );
     }
   }
@@ -70,7 +70,7 @@ export class CreditService {
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`finding`, `credit`),
+        errorMessage.INTERNAL_SERVER_ERROR(`find`, `credit`),
       );
     }
   }
@@ -85,7 +85,7 @@ export class CreditService {
     } catch (error) {
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`adding`, `credits`),
+        errorMessage.INTERNAL_SERVER_ERROR(`add`, `credits`),
       );
     }
   }
@@ -108,7 +108,7 @@ export class CreditService {
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`updating`, `credits`),
+        errorMessage.INTERNAL_SERVER_ERROR(`update`, `credits`),
       );
     }
   }

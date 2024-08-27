@@ -44,7 +44,7 @@ export class AuthService {
       }
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`creating`, `user`),
+        errorMessage.INTERNAL_SERVER_ERROR(`create`, `user`),
       );
     }
   }
@@ -72,7 +72,7 @@ export class AuthService {
       }
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`logging`, `user`),
+        errorMessage.INTERNAL_SERVER_ERROR(`login`, `user`),
       );
     }
   }

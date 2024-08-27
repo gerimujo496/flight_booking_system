@@ -1,3 +1,4 @@
+import { Min } from 'class-validator';
 import { User } from 'src/user/entities/user.entity';
 import {
   Column,
@@ -19,6 +20,7 @@ export class Credit {
   userId: User;
 
   @Column()
+  @Min(0)
   credits: number;
 
   @CreateDateColumn({

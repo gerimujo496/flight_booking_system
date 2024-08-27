@@ -20,12 +20,16 @@ export class UserService {
   async findByEmail(email: string) {
     try {
       const user: User = await this.userRepo.findOne({ where: { email } });
+      if (!user) throw new NotFoundException(errorMessage.NOT_FOUND(`user`));
 
       return user;
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        return false;
+      }
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`finding`, `user`),
+        errorMessage.INTERNAL_SERVER_ERROR(`find`, `user`),
       );
     }
   }
@@ -52,7 +56,7 @@ export class UserService {
     } catch (error) {
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`creating`, `user`),
+        errorMessage.INTERNAL_SERVER_ERROR(`create`, `user`),
       );
     }
   }
@@ -69,7 +73,7 @@ export class UserService {
     } catch (error) {
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`getting`, `users`),
+        errorMessage.INTERNAL_SERVER_ERROR(`get`, `users`),
       );
     }
   }
@@ -94,7 +98,7 @@ export class UserService {
       }
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`finding`, `user`),
+        errorMessage.INTERNAL_SERVER_ERROR(`find`, `user`),
       );
     }
   }
@@ -116,7 +120,7 @@ export class UserService {
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`updating`, `user`),
+        errorMessage.INTERNAL_SERVER_ERROR(`update`, `user`),
       );
     }
   }
@@ -138,7 +142,7 @@ export class UserService {
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`removing`, `user`),
+        errorMessage.INTERNAL_SERVER_ERROR(`remove`, `user`),
       );
     }
   }
