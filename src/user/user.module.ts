@@ -8,12 +8,13 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { Credit } from 'src/credit/entities/credit.entity';
 import { CurrentUserMiddleware } from 'src/middleware/current-user.middleware';
+import { UserDal } from './user.dal';
 
 @Module({
   imports: [CreditModule, TypeOrmModule.forFeature([User, Credit])],
   controllers: [UserController, AuthController],
-  providers: [UserService, AuthService],
-  exports: [UserService],
+  providers: [UserService, AuthService, UserDal],
+  exports: [UserService, UserDal],
 })
 export class UserModule {
   configure(consumer: MiddlewareConsumer) {

@@ -31,7 +31,7 @@ export class AirplaneController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return await this.airplaneService.findOne(+id);
+    return await this.airplaneService.findOneById(+id);
   }
 
   @Patch(':id')

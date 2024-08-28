@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { IsEnum, IsNumber, Min, MinDate } from 'class-validator';
 import { Airport } from 'src/types/airports';
 import { Country } from 'src/types/country';
@@ -9,6 +10,7 @@ export class CreateFlightDto {
   @IsEnum(Airport)
   departureAirport: Airport;
 
+  @Type(() => Date)
   @MinDate(new Date())
   departureTime: Date;
 
@@ -18,6 +20,7 @@ export class CreateFlightDto {
   @IsEnum(Airport)
   arrivalAirport: Airport;
 
+  @Type(() => Date)
   @MinDate(new Date())
   arrivalTime: Date;
 

@@ -6,24 +6,19 @@ import {
 } from '@nestjs/common';
 import { CreateCreditDto } from './dto/create-credit.dto';
 import { UpdateCreditDto } from './dto/update-credit.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Credit } from './entities/credit.entity';
-import { Repository } from 'typeorm';
 import { errorMessage } from 'src/constants/errorMessages';
-import { throwError } from 'src/constants/throwError';
+import { throwError } from 'src/helpers/throwError';
+import { CreditDal } from './credit.dal';
 
 @Injectable()
 export class CreditService {
-  constructor(
-    @InjectRepository(Credit) private creditRepo: Repository<Credit>,
-  ) {}
+  constructor(private creditDal: CreditDal) {}
 
   async create(createCreditDto: CreateCreditDto) {
     try {
-      const { userId, credits } = createCreditDto;
-      const creditInstance = await this.creditRepo.create({ userId, credits });
+      const createdCredit = await this.creditDal.create(createCreditDto);
 
-      return await this.creditRepo.save(creditInstance);
+      return createdCredit;
     } catch (error) {
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -32,9 +27,9 @@ export class CreditService {
     }
   }
 
-  async findOne(id: number) {
+  async findOneById(id: number) {
     try {
-      const credit = await this.creditRepo.findOne({ where: { id } });
+      const credit = await this.creditDal.findOneById(id);
       if (!credit)
         throw new NotFoundException(
           errorMessage.NOT_FOUND(`credit`, `id`, `${id}`),
@@ -42,9 +37,8 @@ export class CreditService {
 
       return credit;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException)
         throwError(HttpStatus.NOT_FOUND, error.message);
-      }
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -55,7 +49,11 @@ export class CreditService {
 
   async removeCredits(id: number, value: number) {
     try {
-      const credit = await this.findOne(id);
+      const credit = await this.creditDal.findOneById(id);
+      if (!credit)
+        throw new NotFoundException(
+          errorMessage.NOT_FOUND(`credit`, `id`, `${id}`),
+        );
 
       if (credit.credits < value)
         throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH);
@@ -64,9 +62,11 @@ export class CreditService {
 
       return await this.update(id, updateBody);
     } catch (error) {
-      if (error instanceof ForbiddenException) {
+      if (error instanceof ForbiddenException)
         throwError(HttpStatus.FORBIDDEN, error.message);
-      }
+
+      if (error instanceof NotFoundException)
+        throwError(HttpStatus.NOT_FOUND, error.message);
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -77,7 +77,11 @@ export class CreditService {
 
   async addCredits(id: number, value: number) {
     try {
-      const credit = await this.findOne(id);
+      const credit = await this.creditDal.findOneById(id);
+      if (!credit)
+        throw new NotFoundException(
+          errorMessage.NOT_FOUND(`credit`, `id`, `${id}`),
+        );
 
       const updateBody: UpdateCreditDto = { credits: value + credit.credits };
 
@@ -92,7 +96,7 @@ export class CreditService {
 
   async update(id: number, updateCreditDto: UpdateCreditDto) {
     try {
-      const updateResult = await this.creditRepo.update(id, updateCreditDto);
+      const updateResult = await this.creditDal.update(id, updateCreditDto);
 
       if (!updateResult.affected) {
         throw new NotFoundException(
@@ -100,11 +104,10 @@ export class CreditService {
         );
       }
 
-      return await this.findOne(id);
+      return await this.findOneById(id);
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException)
         throwError(HttpStatus.NOT_FOUND, error.message);
-      }
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,

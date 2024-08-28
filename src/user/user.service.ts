@@ -1,32 +1,29 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
-import { CreditService } from 'src/credit/credit.service';
-import { Credit } from 'src/credit/entities/credit.entity';
 import { errorMessage } from 'src/constants/errorMessages';
-import { throwError } from 'src/constants/throwError';
+import { throwError } from 'src/helpers/throwError';
+import { UserDal } from './user.dal';
+import { CreditDal } from 'src/credit/credit.dal';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User) private userRepo: Repository<User>,
-    private creditService: CreditService,
-    private dataSource: DataSource,
+    private userDal: UserDal,
+    private creditDal: CreditDal,
   ) {}
 
   async findByEmail(email: string) {
     try {
-      const user: User = await this.userRepo.findOne({ where: { email } });
+      const user: User = await this.userDal.findByEmail(email);
       if (!user) throw new NotFoundException(errorMessage.NOT_FOUND(`user`));
 
       return user;
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        return false;
-      }
+      if (error instanceof NotFoundException)
+        throwError(HttpStatus.NOT_FOUND, error.message);
+
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessage.INTERNAL_SERVER_ERROR(`find`, `user`),
@@ -39,20 +36,20 @@ export class UserService {
       const { firstName, lastName, email, password, country, credits } =
         createUserDto;
 
-      const newUser = this.userRepo.create({
+      const createdUser = await this.userDal.create({
         firstName,
         lastName,
         email,
         password,
         country,
-      });
+      } as CreateUserDto);
 
-      const createdUser = await this.userRepo.save(newUser);
-      await this.creditService.create({
+      await this.creditDal.create({
         userId: createdUser,
         credits,
       });
-      return this.findOne(createdUser.id);
+
+      return this.userDal.findByIdJoinWithCredits(createdUser.id);
     } catch (error) {
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -63,11 +60,7 @@ export class UserService {
 
   async findAll() {
     try {
-      const users = await this.dataSource
-        .getRepository(Credit)
-        .createQueryBuilder('credit')
-        .leftJoinAndSelect('credit.userId', 'user')
-        .getMany();
+      const users = await this.userDal.findAll();
 
       return users;
     } catch (error) {
@@ -78,14 +71,9 @@ export class UserService {
     }
   }
 
-  async findOne(id: number) {
+  async findByIdJoinWithCredits(id: number) {
     try {
-      const user = await this.dataSource
-        .getRepository(Credit)
-        .createQueryBuilder('credit')
-        .leftJoinAndSelect('credit.userId', 'user')
-        .where('credit.userId = :id', { id })
-        .getOne();
+      const user = await this.userDal.findByIdJoinWithCredits(id);
 
       if (!user) {
         throw new NotFoundException(errorMessage.NOT_FOUND(`user`));
@@ -93,9 +81,9 @@ export class UserService {
 
       return user;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException)
         throwError(HttpStatus.NOT_FOUND, error.message);
-      }
+
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessage.INTERNAL_SERVER_ERROR(`find`, `user`),
@@ -105,18 +93,17 @@ export class UserService {
 
   async update(id: number, updateUserDto: UpdateUserDto) {
     try {
-      const updateResult = await this.userRepo.update(id, updateUserDto);
+      const updateResult = await this.userDal.update(id, updateUserDto);
       if (!updateResult.affected) {
         throw new NotFoundException(`The user not found`);
       }
 
-      const updatedUser = await this.findOne(id);
+      const updatedUser = await this.userDal.findByIdJoinWithCredits(id);
 
       return updatedUser;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException)
         throwError(HttpStatus.NOT_FOUND, error.message);
-      }
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -127,18 +114,18 @@ export class UserService {
 
   async remove(id: number) {
     try {
-      const user = await this.userRepo.findOne({ where: { id } });
+      const user = await this.userDal.findOneById(id);
       if (!user) {
         throw new NotFoundException(errorMessage.NOT_FOUND('user'));
       }
-      const returnedObject = await this.findOne(id);
-      await this.userRepo.remove(user);
+      const userObjectJoinedWithCredits =
+        await this.userDal.findByIdJoinWithCredits(id);
+      await this.userDal.remove(user);
 
-      return returnedObject;
+      return userObjectJoinedWithCredits;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException)
         throwError(HttpStatus.NOT_FOUND, error.message);
-      }
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,

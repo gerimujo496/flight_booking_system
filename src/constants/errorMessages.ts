@@ -11,4 +11,7 @@ export const errorMessage = {
   EMAIL_IN_USE: (email: string) => `Email: ${email} is in use`,
 
   INVALID_CREDENTIALS: `Email or password is not correct`,
+
+  PLANE_NOT_AVAILABLE: (planeId: number, time: Date) =>
+    `Plane with ID ${planeId} is not available at ${time.toISOString()}`,
 };

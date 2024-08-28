@@ -1,22 +1,17 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAirplaneDto } from './dto/create-airplane.dto';
 import { UpdateAirplaneDto } from './dto/update-airplane.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Airplane } from './entities/airplane.entity';
-import { Repository } from 'typeorm';
-import { throwError } from 'src/constants/throwError';
+import { throwError } from 'src/helpers/throwError';
 import { errorMessage } from 'src/constants/errorMessages';
+import { AirplaneDal } from './airplane.dal';
 
 @Injectable()
 export class AirplaneService {
-  constructor(
-    @InjectRepository(Airplane) private airplaneRepo: Repository<Airplane>,
-  ) {}
+  constructor(private airplaneDal: AirplaneDal) {}
 
   async create(createAirplaneDto: CreateAirplaneDto) {
     try {
-      const airplane = this.airplaneRepo.create(createAirplaneDto);
-      const createdAirplane = await this.airplaneRepo.save(airplane);
+      const createdAirplane = this.airplaneDal.create(createAirplaneDto);
 
       return createdAirplane;
     } catch (error) {
@@ -29,7 +24,7 @@ export class AirplaneService {
 
   async findAll() {
     try {
-      const airplanes = await this.airplaneRepo.find({});
+      const airplanes = await this.airplaneDal.findAll();
 
       return airplanes;
     } catch (error) {
@@ -40,9 +35,10 @@ export class AirplaneService {
     }
   }
 
-  async findOne(id: number) {
+  async findOneById(id: number) {
     try {
-      const airplane = await this.airplaneRepo.findOne({ where: { id } });
+      const airplane = await this.airplaneDal.findOneById(id);
+
       if (!airplane)
         throw new NotFoundException(
           errorMessage.NOT_FOUND(`airplane`, `id`, `${id}`),
@@ -50,9 +46,8 @@ export class AirplaneService {
 
       return airplane;
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throwError(HttpStatus.NOT_FOUND, error.message);
-      }
+      if (error instanceof NotFoundException)
+        return throwError(HttpStatus.NOT_FOUND, error.message);
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -63,23 +58,19 @@ export class AirplaneService {
 
   async update(id: number, updateAirplaneDto: UpdateAirplaneDto) {
     try {
-      const updateResult = await this.airplaneRepo.update(
-        id,
-        updateAirplaneDto,
-      );
+      const updateResult = await this.airplaneDal.update(id, updateAirplaneDto);
 
       if (!updateResult.affected)
         throw new NotFoundException(
           errorMessage.NOT_FOUND(`airplane`, `id`, `${id}`),
         );
 
-      const updatedAirplane = await this.findOne(id);
+      const updatedAirplane = await this.findOneById(id);
 
       return updatedAirplane;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException)
         throwError(HttpStatus.NOT_FOUND, error.message);
-      }
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -90,18 +81,37 @@ export class AirplaneService {
 
   async remove(id: number) {
     try {
-      const airplane = await this.findOne(id);
-      const deletedAirplane = await this.airplaneRepo.delete(airplane);
+      const airplane = await this.airplaneDal.findOneById(id);
+      const deletedAirplane = await this.airplaneDal.remove(airplane);
 
       return deletedAirplane;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException)
         throwError(HttpStatus.NOT_FOUND, error.message);
-      }
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessage.INTERNAL_SERVER_ERROR(`delete`, `airplane`),
+      );
+    }
+  }
+
+  async isFreeAtThisTime(id: number, departureTime: Date, arrivalTime: Date) {
+    try {
+      const existingFlight =
+        await this.airplaneDal.checkConflictWithTheGivenTime(
+          id,
+          departureTime,
+          arrivalTime,
+        );
+
+      if (!existingFlight.length) return true;
+
+      return false;
+    } catch (error) {
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`find the free time`, `airplane`),
       );
     }
   }

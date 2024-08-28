@@ -1,9 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Airplane } from 'src/airplane/entities/airplane.entity';
-import { Credit } from 'src/credit/entities/credit.entity';
-import { User } from 'src/user/entities/user.entity';
 
 @Module({
   imports: [
@@ -17,7 +14,7 @@ import { User } from 'src/user/entities/user.entity';
         username: configService.get('POSTGRES_USER'),
         password: configService.get('POSTGRES_PASSWORD'),
         database: 'flightbookingsystem',
-        entities: [User, Credit, Airplane],
+        entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         synchronize: true,
       }),
       inject: [ConfigService],

@@ -12,7 +12,7 @@ export class Flight {
   @Column({ type: 'enum', enum: Country, default: Country.UNKNOWN })
   departureCountry: Country;
 
-  @Column({ type: 'enum', enum: Country, default: Airport.BEIJING_CAPITAL })
+  @Column({ type: 'enum', enum: Airport })
   departureAirport: Airport;
 
   @Column()
@@ -22,7 +22,7 @@ export class Flight {
   @Column({ type: 'enum', enum: Country, default: Country.UNKNOWN })
   arrivalCountry: Country;
 
-  @Column({ type: 'enum', enum: Country, default: Airport.BEIJING_CAPITAL })
+  @Column({ type: 'enum', enum: Airport })
   arrivalAirport: Airport;
 
   @Column()

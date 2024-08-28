@@ -1,15 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { FlightService } from './flight.service';
 import { CreateFlightDto } from './dto/create-flight.dto';
 import { UpdateFlightDto } from './dto/update-flight.dto';
+import { AdminGuard } from 'src/guards/admin.guard';
 
 @Controller('flight')
+@UseGuards(AdminGuard)
 export class FlightController {
   constructor(private readonly flightService: FlightService) {}
 
   @Post()
-  create(@Body() createFlightDto: CreateFlightDto) {
-    return this.flightService.create(createFlightDto);
+  async create(@Body() createFlightDto: CreateFlightDto) {
+    return await this.flightService.create(createFlightDto);
   }
 
   @Get()
