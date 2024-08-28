@@ -7,34 +7,26 @@ import {
 import { CreateFlightDto } from './dto/create-flight.dto';
 import { UpdateFlightDto } from './dto/update-flight.dto';
 import { AirplaneService } from 'src/airplane/airplane.service';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Flight } from './entities/flight.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { errorMessage } from 'src/constants/errorMessages';
 import { throwError } from 'src/helpers/throwError';
 import { AirplaneDal } from 'src/airplane/airplane.dal';
+import { FlightDal } from './flight.dal';
+import { FilterFlightDto } from './dto/filter-flight.dto';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class FlightService {
   constructor(
-    @InjectRepository(Flight) private flightRepo: Repository<Flight>,
     private airplaneService: AirplaneService,
     private dataSource: DataSource,
     private airplaneDal: AirplaneDal,
+    private flightDal: FlightDal,
   ) {}
 
   async create(createFlightDto: CreateFlightDto) {
     try {
-      const {
-        departureCountry,
-        departureAirport,
-        departureTime,
-        arrivalCountry,
-        arrivalAirport,
-        arrivalTime,
-        airplaneId,
-        price,
-      } = createFlightDto;
+      const { departureTime, arrivalTime, airplaneId } = createFlightDto;
 
       const airplane = await this.airplaneDal.findOneById(airplaneId);
       if (!airplane)
@@ -54,18 +46,7 @@ export class FlightService {
           errorMessage.PLANE_NOT_AVAILABLE(airplaneId, departureTime),
         );
 
-      const flight = this.flightRepo.create({
-        departureCountry,
-        departureAirport,
-        departureTime,
-        arrivalCountry,
-        arrivalAirport,
-        arrivalTime,
-        airplaneId,
-        price,
-      });
-
-      const createdFlight = await this.flightRepo.save(flight);
+      const createdFlight = await this.flightDal.create(createFlightDto);
 
       return createdFlight;
     } catch (error) {
@@ -82,19 +63,95 @@ export class FlightService {
     }
   }
 
-  findAll() {
-    return `This action returns all flight`;
+  async findAll() {
+    try {
+      const flights = await this.flightDal.findAll();
+
+      return flights;
+    } catch (error) {
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`get`, 'flights'),
+      );
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} flight`;
+  async findOneById(id: number) {
+    try {
+      const flight = await this.flightDal.findOneById(id);
+      if (!flight) {
+        throw new NotFoundException(
+          errorMessage.NOT_FOUND(`flight`, `id`, `${id}`),
+        );
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException)
+        return throwError(HttpStatus.NOT_FOUND, error.message);
+
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`get`, 'flight'),
+      );
+    }
   }
 
-  update(id: number, updateFlightDto: UpdateFlightDto) {
-    return `This action updates a #${id} flight`;
+  async update(id: number, updateFlightDto: UpdateFlightDto) {
+    try {
+      const updateResult = await this.flightDal.update(id, updateFlightDto);
+      if (!updateResult.affected)
+        throw new NotFoundException(
+          errorMessage.NOT_FOUND(`flight`, `id`, `${id}`),
+        );
+
+      const flight = await this.airplaneDal.findOneById(id);
+
+      return flight;
+    } catch (error) {
+      if (error instanceof NotFoundException)
+        return throwError(HttpStatus.NOT_FOUND, error.message);
+
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`get`, 'flight'),
+      );
+    }
   }
 
   remove(id: number) {
     return `This action removes a #${id} flight`;
+  }
+
+  async upcomingFlights() {
+    try {
+      const flights = await this.flightDal.upcomingFlights();
+
+      return flights;
+    } catch (error) {
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`get`, 'flight'),
+      );
+    }
+  }
+
+  async filter(filter: FilterFlightDto, user: User) {
+    try {
+      const { departureTime, departureCountry, arrivalCountry } = filter;
+
+      const newFilter = {
+        departureTime,
+        arrivalCountry,
+        departureCountry: departureCountry || user.country,
+      } as FilterFlightDto;
+
+      const flights = await this.flightDal.filter(newFilter);
+
+      return flights;
+    } catch (error) {
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`filter`, 'flights'),
+      );
+    }
   }
 }

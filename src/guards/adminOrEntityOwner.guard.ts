@@ -11,6 +11,7 @@ export class AdminOrEntityOwnerGuard implements CanActivate {
       return false;
     }
     const { id, isAdmin } = request.currentUser;
+    const { body } = request;
     if (isAdmin) return true;
 
     const paths: string[] = request.path.split('/');
@@ -21,6 +22,8 @@ export class AdminOrEntityOwnerGuard implements CanActivate {
 
     if (path === `user` && requestId == id) return true;
 
-    return false;
+    if (path == `booking-seat` && id == body.userId) return true;
+
+    false;
   }
 }

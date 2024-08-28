@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsNumber, Min, MinDate } from 'class-validator';
+import { IsEnum, IsNumber, Max, Min, MinDate } from 'class-validator';
 import { Airport } from 'src/types/airports';
 import { Country } from 'src/types/country';
 
@@ -28,6 +28,7 @@ export class CreateFlightDto {
   airplaneId: number;
 
   @IsNumber()
-  @Min(0)
+  @Min(4000)
+  @Max(10000)
   price: number;
 }

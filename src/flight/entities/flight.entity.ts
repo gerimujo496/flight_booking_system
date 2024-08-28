@@ -1,8 +1,15 @@
-import { Min, MinDate } from 'class-validator';
+import { Max, Min, MinDate } from 'class-validator';
 import { Airplane } from 'src/airplane/entities/airplane.entity';
 import { Airport } from 'src/types/airports';
 import { Country } from 'src/types/country';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class Flight {
@@ -33,6 +40,20 @@ export class Flight {
   airplaneId: number;
 
   @Column()
-  @Min(0)
+  @Min(4000)
+  @Max(10000)
   price: number;
+
+  @CreateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+  })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
+  })
+  updatedAt: Date;
 }

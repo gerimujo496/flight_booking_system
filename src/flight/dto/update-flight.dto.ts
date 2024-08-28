@@ -1,4 +1,12 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateFlightDto } from './create-flight.dto';
+import { Type } from 'class-transformer';
+import { MinDate } from 'class-validator';
 
-export class UpdateFlightDto extends PartialType(CreateFlightDto) {}
+export class UpdateFlightDto {
+  @Type(() => Date)
+  @MinDate(new Date())
+  departureTime: Date;
+
+  @Type(() => Date)
+  @MinDate(new Date())
+  arrivalTime: Date;
+}
