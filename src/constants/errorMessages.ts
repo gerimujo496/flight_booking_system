@@ -14,4 +14,12 @@ export const errorMessage = {
 
   PLANE_NOT_AVAILABLE: (planeId: number, time: Date) =>
     `Plane with ID ${planeId} is not available at ${time.toISOString()}`,
+
+  CONFLICT_AIRPLANE_WITH_FLIGHT: `The specified airplane is not assigned to this flight.`,
+
+  SEAT_NUMBER_EXCEEDS_AIRPLANE_CAPACITY: `The number of seats requested exceeds the airplane's capacity.`,
+
+  SEAT_IS_NOT_FREE: `Seat is not free`,
+
+  SEAT_NUMBER_REQUIRED: `seatNumber is required `,
 };

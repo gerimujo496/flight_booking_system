@@ -9,10 +9,14 @@ import { UpdateCreditDto } from './dto/update-credit.dto';
 import { errorMessage } from 'src/constants/errorMessages';
 import { throwError } from 'src/helpers/throwError';
 import { CreditDal } from './credit.dal';
+import { RemoveCredit } from 'src/helpers/removeCredits';
 
 @Injectable()
 export class CreditService {
-  constructor(private creditDal: CreditDal) {}
+  constructor(
+    private creditDal: CreditDal,
+    private removeCredit: RemoveCredit,
+  ) {}
 
   async create(createCreditDto: CreateCreditDto) {
     try {
@@ -49,18 +53,7 @@ export class CreditService {
 
   async removeCredits(id: number, value: number) {
     try {
-      const credit = await this.creditDal.findOneById(id);
-      if (!credit)
-        throw new NotFoundException(
-          errorMessage.NOT_FOUND(`credit`, `id`, `${id}`),
-        );
-
-      if (credit.credits < value)
-        throw new ForbiddenException(errorMessage.BALANCE_NOT_ENOUGH);
-
-      const updateBody: UpdateCreditDto = { credits: value - credit.credits };
-
-      return await this.update(id, updateBody);
+      return this.removeCredit.removeCredits(id, value);
     } catch (error) {
       if (error instanceof ForbiddenException)
         throwError(HttpStatus.FORBIDDEN, error.message);

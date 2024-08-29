@@ -38,7 +38,12 @@ export class UserDal {
   }
 
   async findOneById(id: number) {
-    const user = await this.userRepo.findOne({ where: { id } });
+    const user = await this.dataSource
+      .createQueryBuilder()
+      .select('user')
+      .from(User, 'user')
+      .where('user.id = :id', { id })
+      .getOne();
 
     return user;
   }

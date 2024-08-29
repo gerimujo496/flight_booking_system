@@ -12,5 +12,6 @@ import { ExecutionContextHost } from '@nestjs/core/helpers/execution-context-hos
   imports: [TypeOrmModule.forFeature([Airplane, Flight]), AirplaneModule],
   controllers: [FlightController],
   providers: [FlightService, FlightDal, ExecutionContextHost],
+  exports: [FlightDal],
 })
 export class FlightModule {}

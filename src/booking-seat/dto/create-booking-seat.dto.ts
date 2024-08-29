@@ -1,6 +1,10 @@
-import { IsNumber, Max, Min } from 'class-validator';
+import { IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { SeatDto } from './get-freeSeats.dto';
 
-export class CreateBookingSeatDto {
+export class CreateBookingSeatDto extends SeatDto {
+  @IsNumber()
+  userId: number;
+
   @IsNumber()
   flightId: number;
 
@@ -8,10 +12,11 @@ export class CreateBookingSeatDto {
   airplaneId: number;
 
   @IsNumber()
+  @IsOptional()
   seatNumber: number;
 
-  @IsNumber()
   @Min(4000)
   @Max(10000)
-  number: number;
+  @IsOptional()
+  price: number;
 }

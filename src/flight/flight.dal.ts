@@ -28,7 +28,12 @@ export class FlightDal {
   }
 
   async findOneById(id: number) {
-    const flight = await this.flightRepo.find({ where: { id } });
+    const flight = await this.dataSource
+      .getRepository(Flight)
+      .createQueryBuilder('flight')
+      .leftJoinAndSelect('flight.airplaneId', 'airplane')
+      .where('flight.id = :id', { id: id })
+      .getOne();
 
     return flight;
   }

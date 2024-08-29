@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Credit } from './entities/credit.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateCreditDto } from './dto/create-credit.dto';
 import { UpdateCreditDto } from './dto/update-credit.dto';
 
@@ -9,6 +9,7 @@ import { UpdateCreditDto } from './dto/update-credit.dto';
 export class CreditDal {
   constructor(
     @InjectRepository(Credit) private creditRepo: Repository<Credit>,
+    private dataSource: DataSource,
   ) {}
 
   async create(createCreditDto: CreateCreditDto) {
@@ -20,6 +21,17 @@ export class CreditDal {
 
   async findOneById(id: number) {
     const credit = await this.creditRepo.findOne({ where: { id } });
+
+    return credit;
+  }
+
+  async findOneByUserId(id: number) {
+    const credit = await this.dataSource
+      .createQueryBuilder()
+      .select('credit')
+      .from(Credit, 'credit')
+      .where('credit.userId = :id', { id })
+      .getOne();
 
     return credit;
   }

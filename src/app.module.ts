@@ -10,6 +10,7 @@ import { FlightModule } from './flight/flight.module';
 import { BookingSeatModule } from './booking-seat/booking-seat.module';
 
 import cookieSession = require('cookie-session');
+import { HelpersModule } from './helpers/helpers.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import cookieSession = require('cookie-session');
     AirplaneModule,
     FlightModule,
     BookingSeatModule,
+    HelpersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
