@@ -1,0 +1,35 @@
+export const controller_path = {
+  USER: { GET_ONE: ':id', PATCH_ONE: ':id', DELETE_ONE: ':id', GET_ALL: '' },
+  AUTH: { SIGN_UP: 'sign_up', SIGN_IN: 'sign_in', SIGN_OUT: 'sign_out' },
+  FLIGHT: {
+    CREATE_FLIGHT: '',
+    UPCOMING_FLIGHTS: 'upcoming_flights',
+    FILTER: 'filter',
+    GET_ALL: '',
+    GET_ONE: ':id',
+    PATCH_ONE: ':id',
+    DELETE_ONE: ':id',
+    FREE_SEATS: 'free_seats/:flightId',
+  },
+  CREDIT: {
+    SET_VALUE: ':id',
+    ADD_CREDITS: 'add_credits/:id',
+    REMOVE_CREDITS: 'remove_credits/:id',
+  },
+  BOOKING_SEAT: {
+    BOOK_PREFERRED_SEAT: 'book_preferred_seat',
+    BOOK_RANDOM_SEAT: 'book_random_seat',
+    GET_ALL: '',
+    GET_ONE: ':id',
+    APPROVE_BOOKING: 'approve_booking/:id',
+    REJECT_BOOKING: 'reject_booking/:id',
+    USER_HISTORY: 'user_booking_history',
+  },
+  AIRPLANE: {
+    CREATE: '',
+    GET_ALL: '',
+    GET_ONE: ':id',
+    PATCH_ONE: ':id',
+    DELETE_ONE: ':id',
+  },
+};

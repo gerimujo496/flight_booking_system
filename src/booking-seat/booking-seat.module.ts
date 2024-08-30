@@ -23,6 +23,6 @@ import { Flight } from 'src/flight/entities/flight.entity';
   ],
   controllers: [BookingSeatController],
   providers: [BookingSeatService, BookingSeatDal, BookingSeatHelper],
-  exports: [BookingSeatDal, BookingSeatHelper],
+  exports: [BookingSeatDal, BookingSeatHelper, BookingSeatService],
 })
 export class BookingSeatModule {}

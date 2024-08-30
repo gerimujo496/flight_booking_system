@@ -7,7 +7,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateBookingSeatDto } from './dto/create-booking-seat.dto';
-import { UpdateBookingSeatDto } from './dto/update-booking-seat.dto';
 import { AirplaneDal } from 'src/airplane/airplane.dal';
 import { FlightDal } from 'src/flight/flight.dal';
 import { errorMessage } from 'src/constants/errorMessages';
@@ -56,7 +55,10 @@ export class BookingSeatService {
 
       const bookingSeat = await this.bookingDal.create(newSeatBookingDto);
 
-      return bookingSeat;
+      const bookingSeatJoinedWithColumns =
+        await this.bookingDal.findOneByIdJoinColumns(bookingSeat.id);
+
+      return bookingSeatJoinedWithColumns;
     } catch (error) {
       if (error instanceof ForbiddenException)
         throwError(HttpStatus.FORBIDDEN, error.message);
@@ -117,7 +119,10 @@ export class BookingSeatService {
 
       const bookingSeat = await this.bookingDal.create(newSeatBookingDto);
 
-      return bookingSeat;
+      const bookingSeatJoinedWithColumns =
+        await this.bookingDal.findOneByIdJoinColumns(bookingSeat.id);
+
+      return bookingSeatJoinedWithColumns;
     } catch (error) {
       if (error instanceof ForbiddenException)
         throwError(HttpStatus.FORBIDDEN, error.message);
@@ -130,23 +135,60 @@ export class BookingSeatService {
 
       if (error instanceof BadRequestException)
         throwError(HttpStatus.BAD_REQUEST, error.message);
-      // errorMessage.INTERNAL_SERVER_ERROR(`create`, `booking `)
-      throwError(HttpStatus.BAD_REQUEST, error.message);
+
+      throwError(
+        HttpStatus.BAD_REQUEST,
+        errorMessage.INTERNAL_SERVER_ERROR(`create`, `booking `),
+      );
     }
   }
-  findAll() {
-    return `This action returns all bookingSeat`;
+  async findAll() {
+    const allBookings = await this.bookingDal.findAllJoinColumns();
+
+    return allBookings;
+    try {
+    } catch (error) {}
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} bookingSeat`;
-  }
+  async findOne(id: number) {
+    try {
+      const booking = await this.bookingDal.findOneByIdJoinColumns(id);
+      if (!booking)
+        throw new NotFoundException(
+          errorMessage.NOT_FOUND(`booking`, `id`, `${id}`),
+        );
 
-  update(id: number, updateBookingSeatDto: UpdateBookingSeatDto) {
-    return `This action updates a #${id} bookingSeat`;
-  }
+      return booking;
+    } catch (error) {
+      if (error instanceof NotFoundException)
+        throwError(HttpStatus.NOT_FOUND, error.message);
 
-  remove(id: number) {
-    return `This action removes a #${id} bookingSeat`;
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`get`, `booking`),
+      );
+    }
+  }
+  async approveBooking(id: number) {
+    try {
+      const booking =
+        await this.bookingSeatHelper.getBookingOrThrowErrorIfItDoNotExists(id);
+
+      const updatedResult = await this.bookingDal.approveBooking(booking.id);
+
+      const otherBookings =
+        await this.bookingDal.rejectBookingsAndReturnCredits(
+          booking.id,
+          booking.flightId['id'],
+          booking.seatNumber,
+        );
+      console.log(otherBookings);
+      return booking;
+    } catch (error) {
+      if (error instanceof NotFoundException)
+        throwError(HttpStatus.NOT_FOUND, error.message);
+
+      throwError(HttpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
   }
 }

@@ -1,29 +1,57 @@
-import { CanActivate, ExecutionContext } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Observable } from 'rxjs';
+import { BookingSeatDal } from 'src/booking-seat/bookingSeat.dal';
+import { BookingSeat } from 'src/booking-seat/entities/booking-seat.entity';
+import { DataSource } from 'typeorm';
 
+@Injectable()
 export class AdminOrEntityOwnerGuard implements CanActivate {
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  constructor(private dataSource: DataSource) {}
+  async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
 
     if (!request.currentUser) {
       return false;
     }
-    const { id, isAdmin } = request.currentUser;
-    const { body } = request;
+    const { id, isAdmin, body, method } = this.getRequestProperties(request);
+
     if (isAdmin) return true;
 
     const paths: string[] = request.path.split('/');
     if (paths.length < 2) return false;
 
     const path = paths[1];
-    const requestId = paths[2];
+    const secondPath = paths[2];
 
-    if (path === `user` && requestId == id) return true;
+    if (path === `user` && secondPath == id) return true;
 
-    if (path == `booking-seat` && id == body.userId) return true;
+    if (
+      path == `booking-seat` &&
+      (secondPath == 'bookPreferredSeat' || secondPath == 'bookRandomSeat') &&
+      method == 'POST' &&
+      id == body.userId
+    )
+      return true;
 
+    if (path == 'booking-seat' && !isNaN(+secondPath) && method == 'GET') {
+      const booking = await this.dataSource
+        .getRepository(BookingSeat)
+        .createQueryBuilder('booking_seat')
+        .leftJoinAndSelect('booking_seat.userId', 'user')
+        .where('booking_seat.id = :id', { id: secondPath })
+        .getOne();
+
+      if (booking.userId['id'] == id) return true;
+      return false;
+    }
     false;
+  }
+
+  getRequestProperties(request: any) {
+    const { id, isAdmin } = request.currentUser;
+    const { body } = request;
+    const { method } = request;
+
+    return { id, isAdmin, body, method };
   }
 }

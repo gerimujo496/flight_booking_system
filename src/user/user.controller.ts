@@ -16,26 +16,28 @@ import { UserDto } from './dto/user.dto';
 import { AdminGuard } from 'src/guards/admin.guard';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { AdminOrEntityOwnerGuard } from 'src/guards/adminOrEntityOwner.guard';
+import { controller_path } from 'src/constants/controllerPath';
+import { controller } from 'src/constants/controller';
 
-@Controller('user')
+@Controller(controller.USER)
 @UseGuards(AuthGuard)
 @UseGuards(AdminOrEntityOwnerGuard)
 @UseInterceptors(new SerializerInterceptor(UserDto))
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get()
+  @Get(controller_path.USER.GET_ALL)
   @UseGuards(AdminGuard)
   findAll() {
     return this.userService.findAll();
   }
 
-  @Get(':id')
+  @Get(controller_path.USER.GET_ONE)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findByIdJoinWithCredits(id);
   }
 
-  @Patch(':id')
+  @Patch(controller_path.USER.PATCH_ONE)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
@@ -43,7 +45,7 @@ export class UserController {
     return this.userService.update(id, updateUserDto);
   }
 
-  @Delete(':id')
+  @Delete(controller_path.USER.DELETE_ONE)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.userService.remove(id);
   }

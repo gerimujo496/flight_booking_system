@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 
-export class SeatDto {
+export class FreeSeatsDto {
   @Expose()
   flightId: number;
 

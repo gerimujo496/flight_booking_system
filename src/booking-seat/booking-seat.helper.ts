@@ -87,4 +87,14 @@ export class BookingSeatHelper {
 
     return newPrice;
   }
+
+  async getBookingOrThrowErrorIfItDoNotExists(id: number) {
+    const booking = await this.bookingDal.findOneByIdJoinColumns(id);
+    if (!booking)
+      throw new NotFoundException(
+        errorMessage.NOT_FOUND(`booking`, `id`, `${id}`),
+      );
+
+    return booking;
+  }
 }

@@ -16,51 +16,52 @@ import { UpdateBookingSeatDto } from './dto/update-booking-seat.dto';
 import { AdminOrEntityOwnerGuard } from 'src/guards/adminOrEntityOwner.guard';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { SerializerInterceptor } from 'src/iterceptors/serialize.interceptors';
-import { SeatDto } from './dto/get-freeSeats.dto';
+import { FreeSeatsDto } from './dto/get-freeSeats.dto';
+import { AdminGuard } from 'src/guards/admin.guard';
+import { controller } from 'src/constants/controller';
+import { controller_path } from 'src/constants/controllerPath';
+import { BookingSeatsDto } from './dto/seats.dto';
+import { Admin } from 'typeorm';
+import { BookingSeatDal } from './bookingSeat.dal';
 
-@Controller('booking-seat')
+@Controller(controller.BOOKING_SEAT)
 @UseGuards(AuthGuard)
+@UseInterceptors(new SerializerInterceptor(BookingSeatsDto))
 export class BookingSeatController {
-  constructor(private readonly bookingSeatService: BookingSeatService) {}
+  constructor(
+    private readonly bookingSeatService: BookingSeatService,
+    private bookingDal: BookingSeatDal,
+  ) {}
 
   @UseGuards(AdminOrEntityOwnerGuard)
-  @Post('/bookPreferredSeat')
+  @Post(controller_path.BOOKING_SEAT.BOOK_PREFERRED_SEAT)
   async create(@Body() createBookingSeatDto: CreateBookingSeatDto) {
     return await this.bookingSeatService.bookPreferredSeat(
       createBookingSeatDto,
     );
   }
 
-  @Post('/bookRandomSeat')
+  @UseGuards(AdminOrEntityOwnerGuard)
+  @Post(controller_path.BOOKING_SEAT.BOOK_RANDOM_SEAT)
   async bookRandomSeat(@Body() createBookingSeatDto: CreateBookingSeatDto) {
     return await this.bookingSeatService.bookRandomSeat(createBookingSeatDto);
   }
-  @UseInterceptors(new SerializerInterceptor(SeatDto))
-  @Get('/freeSeats/:flightId')
-  async freeSeats(@Param('flightId', ParseIntPipe) flightId: number) {
-    return await this.bookingSeatService.getFreeSeats(flightId);
+
+  @UseGuards(AdminGuard)
+  @Patch(controller_path.BOOKING_SEAT.APPROVE_BOOKING)
+  async approveBooking(@Param('id', ParseIntPipe) id: number) {
+    return await this.bookingSeatService.approveBooking(id);
   }
 
-  @Get()
-  findAll() {
-    return this.bookingSeatService.findAll();
+  @UseGuards(AdminGuard)
+  @Get(controller_path.BOOKING_SEAT.GET_ALL)
+  async findAll() {
+    return await this.bookingSeatService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.bookingSeatService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateBookingSeatDto: UpdateBookingSeatDto,
-  ) {
-    return this.bookingSeatService.update(+id, updateBookingSeatDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.bookingSeatService.remove(+id);
+  @UseGuards(AdminOrEntityOwnerGuard)
+  @Get(controller_path.BOOKING_SEAT.GET_ONE)
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return await this.bookingSeatService.findOne(id);
   }
 }

@@ -1,7 +1,6 @@
 import { IsNumber, IsOptional, Max, Min } from 'class-validator';
-import { SeatDto } from './get-freeSeats.dto';
 
-export class CreateBookingSeatDto extends SeatDto {
+export class CreateBookingSeatDto {
   @IsNumber()
   userId: number;
 

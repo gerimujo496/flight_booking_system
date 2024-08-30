@@ -10,18 +10,36 @@ import { CreditService } from './credit.service';
 import { UpdateCreditDto } from './dto/update-credit.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { AdminOrEntityOwnerGuard } from 'src/guards/adminOrEntityOwner.guard';
+import { controller } from 'src/constants/controller';
+import { controller_path } from 'src/constants/controllerPath';
 
-@Controller('credit')
+@Controller(controller.CREDIT)
 @UseGuards(AuthGuard)
 @UseGuards(AdminOrEntityOwnerGuard)
 export class CreditController {
   constructor(private readonly creditService: CreditService) {}
 
-  @Patch(':id')
-  update(
+  @Patch(controller_path.CREDIT.REMOVE_CREDITS)
+  async removeCredits(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCreditDto: UpdateCreditDto,
   ) {
-    return this.creditService.update(id, updateCreditDto);
+    return await this.creditService.removeCredits(id, updateCreditDto.credits);
+  }
+
+  @Patch(controller_path.CREDIT.ADD_CREDITS)
+  async addCredits(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCreditDto: UpdateCreditDto,
+  ) {
+    return await this.creditService.addCredits(id, updateCreditDto.credits);
+  }
+
+  @Patch(controller_path.CREDIT.SET_VALUE)
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCreditDto: UpdateCreditDto,
+  ) {
+    return await this.creditService.update(id, updateCreditDto);
   }
 }
