@@ -22,4 +22,15 @@ export const errorMessage = {
   SEAT_IS_NOT_FREE: `Seat is not free`,
 
   SEAT_NUMBER_REQUIRED: `seatNumber is required `,
+
+  BOOKING_IS_NOT_APPROVED:
+    'Booking cannot be printed because it has not been approved.',
+
+  BOOKING_CONFLICT: (state: string) => `Booking already ${state}`,
+
+  ARRIVAL_TIME_MUST_BE_AFTER: 'Arrival time must be after the departure time',
+
+  CONFLICT_FLIGHT_WITH_RETURN_FLIGHT: `The id of flight_id should not be equal to return_flight_id`,
+
+  NO_AVAILABLE_SEATS: `'No seats are available for this flight.'`,
 };

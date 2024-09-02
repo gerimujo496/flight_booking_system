@@ -11,6 +11,8 @@ import { BookingSeatModule } from './booking-seat/booking-seat.module';
 
 import cookieSession = require('cookie-session');
 import { HelpersModule } from './helpers/helpers.module';
+import { EmailModule } from './email/email.module';
+import { StatisticModule } from './statistic/statistic.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { HelpersModule } from './helpers/helpers.module';
     FlightModule,
     BookingSeatModule,
     HelpersModule,
+    EmailModule,
+    StatisticModule,
   ],
   controllers: [AppController],
   providers: [AppService],

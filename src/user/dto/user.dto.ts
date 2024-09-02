@@ -2,25 +2,25 @@ import { Expose, Transform } from 'class-transformer';
 
 export class UserDto {
   @Transform(({ obj }) => {
-    return obj.userId.firstName;
+    return obj.user_id.first_name;
   })
   @Expose()
-  firstName: string;
+  first_name: string;
 
   @Transform(({ obj }) => {
-    return obj.userId.lastName;
+    return obj.user_id.last_name;
   })
   @Expose()
-  lastName: string;
+  last_name: string;
 
   @Transform(({ obj }) => {
-    return obj.userId.email;
+    return obj.user_id.email;
   })
   @Expose()
   email: string;
 
   @Transform(({ obj }) => {
-    return obj.userId.country;
+    return obj.user_id.country;
   })
   @Expose()
   country: string;

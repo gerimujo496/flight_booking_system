@@ -17,7 +17,7 @@ export class Credit {
 
   @OneToOne(() => User, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn()
-  userId: User;
+  user_id: User;
 
   @Column()
   @Min(0)
@@ -27,12 +27,12 @@ export class Credit {
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
-  createdAt: Date;
+  created_at: Date;
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
-  updatedAt: Date;
+  updated_at: Date;
 }

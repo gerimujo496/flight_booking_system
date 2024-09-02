@@ -15,11 +15,11 @@ export class User {
 
   @Column()
   @Length(1, 20)
-  firstName: string;
+  first_name: string;
 
   @Column()
   @Length(1, 20)
-  lastName: string;
+  last_name: string;
 
   @Column()
   @Length(10, 50)
@@ -34,6 +34,9 @@ export class User {
 
   @Column({ type: 'enum', enum: Country, default: Country.UNKNOWN })
   country: Country;
+
+  @Column({ default: true })
+  is_active: boolean;
 
   @CreateDateColumn({
     type: 'timestamp',

@@ -26,7 +26,7 @@ export class CurrentUserMiddleware implements NestMiddleware {
     if (userId) {
       const user = await this.usersService.findByIdJoinWithCredits(userId);
 
-      req.currentUser = user.userId;
+      req.currentUser = user.user_id;
     }
     next();
   }

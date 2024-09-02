@@ -30,7 +30,7 @@ export class CreditDal {
       .createQueryBuilder()
       .select('credit')
       .from(Credit, 'credit')
-      .where('credit.userId = :id', { id })
+      .where('credit.user_id = :id', { id })
       .getOne();
 
     return credit;

@@ -8,19 +8,22 @@ import {
   ParseIntPipe,
   UseInterceptors,
   UseGuards,
+  UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
 import { UserService } from './user.service';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto, UpdateUserSchema } from './dto/update-user.dto';
 import { SerializerInterceptor } from 'src/iterceptors/serialize.interceptors';
 import { UserDto } from './dto/user.dto';
 import { AdminGuard } from 'src/guards/admin.guard';
-import { AuthGuard } from 'src/guards/auth.guard';
 import { AdminOrEntityOwnerGuard } from 'src/guards/adminOrEntityOwner.guard';
 import { controller_path } from 'src/constants/controllerPath';
 import { controller } from 'src/constants/controller';
+import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
 
+@ApiTags(controller.USER)
 @Controller(controller.USER)
-@UseGuards(AuthGuard)
 @UseGuards(AdminOrEntityOwnerGuard)
 @UseInterceptors(new SerializerInterceptor(UserDto))
 export class UserController {
@@ -38,6 +41,7 @@ export class UserController {
   }
 
   @Patch(controller_path.USER.PATCH_ONE)
+  @UsePipes(new ZodValidationPipe(UpdateUserSchema))
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,

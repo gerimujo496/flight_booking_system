@@ -4,6 +4,7 @@ import { UpdateAirplaneDto } from './dto/update-airplane.dto';
 import { throwError } from 'src/helpers/throwError';
 import { errorMessage } from 'src/constants/errorMessages';
 import { AirplaneDal } from './airplane.dal';
+import { FilterAirplaneDto } from './dto/filter-airplane.dto';
 
 @Injectable()
 export class AirplaneService {
@@ -82,9 +83,13 @@ export class AirplaneService {
   async remove(id: number) {
     try {
       const airplane = await this.airplaneDal.findOneById(id);
-      const deletedAirplane = await this.airplaneDal.remove(airplane);
-
-      return deletedAirplane;
+      if (!airplane)
+        throw new NotFoundException(
+          errorMessage.NOT_FOUND(`airplane`, `id`, `${id}`),
+        );
+      await this.airplaneDal.remove(id);
+      airplane.is_active = false;
+      return airplane;
     } catch (error) {
       if (error instanceof NotFoundException)
         throwError(HttpStatus.NOT_FOUND, error.message);
@@ -97,22 +102,25 @@ export class AirplaneService {
   }
 
   async isFreeAtThisTime(id: number, departureTime: Date, arrivalTime: Date) {
+    const existingFlight = await this.airplaneDal.checkConflictWithTheGivenTime(
+      id,
+      departureTime,
+      arrivalTime,
+    );
+
+    if (!existingFlight.length) return true;
+
+    return false;
+  }
+
+  async filterAirplanes(filter: FilterAirplaneDto) {
     try {
-      const existingFlight =
-        await this.airplaneDal.checkConflictWithTheGivenTime(
-          id,
-          departureTime,
-          arrivalTime,
-        );
+      const availableAirplanes =
+        await this.airplaneDal.filterFreeAirplanes(filter);
 
-      if (!existingFlight.length) return true;
-
-      return false;
+      return availableAirplanes;
     } catch (error) {
-      throwError(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`find the free time`, `airplane`),
-      );
+      throwError(HttpStatus.INTERNAL_SERVER_ERROR, error.message);
     }
   }
 }

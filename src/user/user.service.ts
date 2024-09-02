@@ -1,4 +1,5 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -33,19 +34,19 @@ export class UserService {
 
   async createUser(createUserDto: CreateUserDto) {
     try {
-      const { firstName, lastName, email, password, country, credits } =
+      const { first_name, last_name, email, password, country, credits } =
         createUserDto;
 
       const createdUser = await this.userDal.create({
-        firstName,
-        lastName,
+        first_name,
+        last_name,
         email,
         password,
         country,
       } as CreateUserDto);
 
       await this.creditDal.create({
-        userId: createdUser,
+        user_id: createdUser,
         credits,
       });
 
@@ -120,7 +121,7 @@ export class UserService {
       }
       const userObjectJoinedWithCredits =
         await this.userDal.findByIdJoinWithCredits(id);
-      await this.userDal.remove(user);
+      await this.userDal.remove(user.id);
 
       return userObjectJoinedWithCredits;
     } catch (error) {
@@ -130,6 +131,19 @@ export class UserService {
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessage.INTERNAL_SERVER_ERROR(`remove`, `user`),
+      );
+    }
+  }
+
+  async passengersNumber() {
+    try {
+      const number = await this.userDal.passengerNumber();
+
+      return { count: number };
+    } catch (error) {
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`get`, `total number of passengers`),
       );
     }
   }

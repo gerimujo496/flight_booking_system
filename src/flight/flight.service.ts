@@ -14,6 +14,8 @@ import { AirplaneDal } from 'src/airplane/airplane.dal';
 import { FlightDal } from './flight.dal';
 import { FilterFlightDto } from './dto/filter-flight.dto';
 import { User } from 'src/user/entities/user.entity';
+import { BookingSeatHelper } from 'src/booking-seat/booking-seat.helper';
+import { FlightHelper } from './flight.helper';
 
 @Injectable()
 export class FlightService {
@@ -22,28 +24,30 @@ export class FlightService {
     private dataSource: DataSource,
     private airplaneDal: AirplaneDal,
     private flightDal: FlightDal,
+    private bookingSeatHelper: BookingSeatHelper,
+    private flightHelper: FlightHelper,
   ) {}
 
   async create(createFlightDto: CreateFlightDto) {
     try {
-      const { departureTime, arrivalTime, airplaneId } = createFlightDto;
+      const { departure_time, arrival_time, airplane_id } = createFlightDto;
 
-      const airplane = await this.airplaneDal.findOneById(airplaneId);
+      const airplane = await this.airplaneDal.findOneById(airplane_id);
       if (!airplane)
         throw new NotFoundException(
-          errorMessage.NOT_FOUND(`airplane`, `id`, `${airplaneId}`),
+          errorMessage.NOT_FOUND(`airplane`, `id`, `${airplane_id}`),
         );
 
       const isAirplaneFreeAtThisTime =
         await this.airplaneService.isFreeAtThisTime(
-          airplaneId,
-          departureTime,
-          arrivalTime,
+          airplane_id,
+          departure_time,
+          arrival_time,
         );
 
       if (!isAirplaneFreeAtThisTime)
         throw new ConflictException(
-          errorMessage.PLANE_NOT_AVAILABLE(airplaneId, departureTime),
+          errorMessage.PLANE_NOT_AVAILABLE(airplane_id, departure_time),
         );
 
       const createdFlight = await this.flightDal.create(createFlightDto);
@@ -56,10 +60,7 @@ export class FlightService {
       if (error instanceof NotFoundException)
         return throwError(HttpStatus.NOT_FOUND, error.message);
 
-      throwError(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`create`, 'flight'),
-      );
+      throwError(HttpStatus.INTERNAL_SERVER_ERROR, error.message);
     }
   }
 
@@ -84,6 +85,8 @@ export class FlightService {
           errorMessage.NOT_FOUND(`flight`, `id`, `${id}`),
         );
       }
+
+      return flight;
     } catch (error) {
       if (error instanceof NotFoundException)
         return throwError(HttpStatus.NOT_FOUND, error.message);
@@ -103,7 +106,7 @@ export class FlightService {
           errorMessage.NOT_FOUND(`flight`, `id`, `${id}`),
         );
 
-      const flight = await this.airplaneDal.findOneById(id);
+      const flight = await this.flightDal.findOneById(id);
 
       return flight;
     } catch (error) {
@@ -115,10 +118,6 @@ export class FlightService {
         errorMessage.INTERNAL_SERVER_ERROR(`get`, 'flight'),
       );
     }
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} flight`;
   }
 
   async upcomingFlights() {
@@ -136,12 +135,12 @@ export class FlightService {
 
   async filter(filter: FilterFlightDto, user: User) {
     try {
-      const { departureTime, departureCountry, arrivalCountry } = filter;
+      const { departure_time, departure_country, arrival_country } = filter;
 
       const newFilter = {
-        departureTime,
-        arrivalCountry,
-        departureCountry: departureCountry || user.country,
+        departure_time,
+        arrival_country,
+        departure_country: departure_country || user.country,
       } as FilterFlightDto;
 
       const flights = await this.flightDal.filter(newFilter);
@@ -150,7 +149,37 @@ export class FlightService {
     } catch (error) {
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`filter`, 'flights'),
+        errorMessage.INTERNAL_SERVER_ERROR(`filter`, 'flight'),
+      );
+    }
+  }
+  async remove(id: number) {
+    try {
+      const flight = await this.bookingSeatHelper.getFlightOrThrowError(id);
+      await this.flightHelper.rejectAllBookingsAndReturnCredits(flight);
+
+      await this.flightDal.removeFlight(flight.id);
+
+      flight.is_active = false;
+
+      return flight;
+    } catch (error) {
+      if (error instanceof NotFoundException)
+        throwError(HttpStatus.NOT_FOUND, error.message);
+
+      throwError(HttpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  }
+
+  async getNumberOfFlights() {
+    try {
+      const number = await this.flightDal.getNumberOfFlights();
+
+      return { count: number };
+    } catch (error) {
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`get`, `count of total flights`),
       );
     }
   }

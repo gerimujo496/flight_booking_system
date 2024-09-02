@@ -1,8 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { BookingSeatDal } from 'src/booking-seat/bookingSeat.dal';
-import { BookingSeat } from 'src/booking-seat/entities/booking-seat.entity';
 import { DataSource } from 'typeorm';
+
+import { BookingSeat } from 'src/booking-seat/entities/booking-seat.entity';
 
 @Injectable()
 export class AdminOrEntityOwnerGuard implements CanActivate {
@@ -37,11 +36,11 @@ export class AdminOrEntityOwnerGuard implements CanActivate {
       const booking = await this.dataSource
         .getRepository(BookingSeat)
         .createQueryBuilder('booking_seat')
-        .leftJoinAndSelect('booking_seat.userId', 'user')
+        .leftJoinAndSelect('booking_seat.user_id', 'user')
         .where('booking_seat.id = :id', { id: secondPath })
         .getOne();
 
-      if (booking.userId['id'] == id) return true;
+      if (booking.user_id['id'] == id) return true;
       return false;
     }
     false;

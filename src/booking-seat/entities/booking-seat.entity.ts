@@ -6,6 +6,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -17,17 +18,26 @@ export class BookingSeat {
   id: number;
 
   @ManyToOne(() => User, (user) => user.id)
-  userId: number;
+  user_id: number;
 
   @ManyToOne(() => Flight, (flight) => flight.id)
-  flightId: number;
+  flight_id: number;
 
   @ManyToOne(() => Airplane, (airplane) => airplane.id)
-  airplaneId: number;
+  airplane_id: number;
 
   @Column()
   @Max(500)
-  seatNumber: number;
+  seat_number: number;
+
+  @ManyToOne(() => Flight, (flight) => flight.id, { nullable: true })
+  return_flight_id: number;
+
+  @ManyToOne(() => Airplane, (airplane) => airplane.id)
+  return_airplane_id: number;
+
+  @Column({ nullable: true })
+  return_seat_number: number;
 
   @Column()
   @Min(4000)
@@ -35,18 +45,18 @@ export class BookingSeat {
   price: number;
 
   @Column({ default: null })
-  isApproved: boolean;
+  is_approved: boolean;
 
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
-  createdAt: Date;
+  created_at: Date;
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
-  updatedAt: Date;
+  updated_at: Date;
 }

@@ -4,10 +4,11 @@ import {
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { promisify } from 'util';
+import { randomBytes, scrypt as _scrypt } from 'crypto';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
-import { randomBytes, scrypt as _scrypt } from 'crypto';
-import { promisify } from 'util';
 import { SignInDto } from './dto/signIn-user.dto';
 import { errorMessage } from 'src/constants/errorMessages';
 import { throwError } from 'src/helpers/throwError';

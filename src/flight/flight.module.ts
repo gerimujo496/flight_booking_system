@@ -8,6 +8,7 @@ import { AirplaneModule } from 'src/airplane/airplane.module';
 import { FlightDal } from './flight.dal';
 import { ExecutionContextHost } from '@nestjs/core/helpers/execution-context-host';
 import { BookingSeatModule } from 'src/booking-seat/booking-seat.module';
+import { FlightHelper } from './flight.helper';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { BookingSeatModule } from 'src/booking-seat/booking-seat.module';
     forwardRef(() => BookingSeatModule),
   ],
   controllers: [FlightController],
-  providers: [FlightService, FlightDal, ExecutionContextHost],
-  exports: [FlightDal],
+  providers: [FlightService, FlightDal, ExecutionContextHost, FlightHelper],
+  exports: [FlightDal, FlightService],
 })
 export class FlightModule {}

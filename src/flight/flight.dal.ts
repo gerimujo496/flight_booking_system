@@ -31,8 +31,9 @@ export class FlightDal {
     const flight = await this.dataSource
       .getRepository(Flight)
       .createQueryBuilder('flight')
-      .leftJoinAndSelect('flight.airplaneId', 'airplane')
+      .leftJoinAndSelect('flight.airplane_id', 'airplane')
       .where('flight.id = :id', { id: id })
+      .andWhere('flight.is_active = true')
       .getOne();
 
     return flight;
@@ -45,44 +46,61 @@ export class FlightDal {
   }
 
   async upcomingFlights() {
-    const upcomingFlights = await this.dataSource
+    const upcomingFlights = this.dataSource
       .createQueryBuilder()
       .select('flight')
       .from(Flight, 'flight')
-      .where('flight.departureTime > :departureTime', {
-        departureTime: new Date(),
+      .where('flight.departure_time >= :departure_time', {
+        departure_time: new Date(),
       })
-      .execute();
+      .andWhere('flight.is_active = true')
+      .getMany();
 
     return upcomingFlights;
   }
 
   async filter(filter: FilterFlightDto) {
-    const { departureTime, departureCountry, arrivalCountry } = filter;
+    const { departure_time, departure_country, arrival_country } = filter;
 
-    const query = this.dataSource
+    const query = await this.dataSource
       .createQueryBuilder()
       .select('flight')
-      .from(Flight, 'flight');
+      .from(Flight, 'flight')
+      .where('is_active = true');
 
-    if (departureTime) {
-      query.andWhere('flight.departureTime = :departureTime', {
-        departureTime,
+    if (departure_time) {
+      query.andWhere('departure_time = :departure_time', {
+        departure_time,
       });
     }
 
-    if (departureCountry !== Country.UNKNOWN) {
-      query.andWhere('flight.departureCountry = :departureCountry', {
-        departureCountry,
+    if (departure_country != Country.UNKNOWN) {
+      query.andWhere('flight.departure_country = :departure_country', {
+        departure_country,
       });
     }
 
-    if (arrivalCountry) {
-      query.andWhere('flight.arrivalCountry = :arrivalCountry', {
-        arrivalCountry,
+    if (arrival_country) {
+      query.andWhere('flight.arrival_country = :arrival_country', {
+        arrival_country,
       });
     }
 
-    return query.execute();
+    return await query.getMany();
+  }
+
+  async removeFlight(id: number) {
+    const deleteResult = await this.flightRepo.update(id, { is_active: false });
+
+    return deleteResult;
+  }
+  async getNumberOfFlights() {
+    const number = await this.dataSource
+      .getRepository(Flight)
+      .createQueryBuilder('flight')
+      .where('flight.is_active = true')
+      .getCount();
+
+    return number;
   }
 }

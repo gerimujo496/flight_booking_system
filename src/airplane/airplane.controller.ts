@@ -8,22 +8,37 @@ import {
   Delete,
   UseGuards,
   ParseIntPipe,
+  Query,
+  UsePipes,
 } from '@nestjs/common';
 import { AirplaneService } from './airplane.service';
-import { CreateAirplaneDto } from './dto/create-airplane.dto';
+import {
+  CreateAirplaneDto,
+  CreateAirplaneSchema,
+} from './dto/create-airplane.dto';
 import { UpdateAirplaneDto } from './dto/update-airplane.dto';
 import { AdminGuard } from 'src/guards/admin.guard';
 import { controller } from 'src/constants/controller';
 import { controller_path } from 'src/constants/controllerPath';
+import { FilterAirplaneDto } from './dto/filter-airplane.dto';
+import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller(controller.AIRPLANE)
+@ApiTags(controller.AIRPLANE)
 @UseGuards(AdminGuard)
 export class AirplaneController {
   constructor(private readonly airplaneService: AirplaneService) {}
 
   @Post(controller_path.AIRPLANE.CREATE)
+  @UsePipes(new ZodValidationPipe(CreateAirplaneSchema))
   async create(@Body() createAirplaneDto: CreateAirplaneDto) {
     return await this.airplaneService.create(createAirplaneDto);
+  }
+
+  @Get(controller_path.AIRPLANE.AVAILABLE_AIRPLANES)
+  async filterAirplanes(@Query() filter: FilterAirplaneDto) {
+    return await this.airplaneService.filterAirplanes(filter);
   }
 
   @Get(controller_path.AIRPLANE.GET_ALL)

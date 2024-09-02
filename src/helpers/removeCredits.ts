@@ -18,6 +18,7 @@ export class RemoveCredit {
 
   async removeCredits(id: number, value: number) {
     const credit = await this.creditDal.findOneByUserId(id);
+
     if (!credit)
       throw new NotFoundException(
         errorMessage.NOT_FOUND(`credit`, `id`, `${id}`),

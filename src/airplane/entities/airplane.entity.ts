@@ -1,8 +1,10 @@
 import { Length, Max, Min } from 'class-validator';
+import { Flight } from 'src/flight/entities/flight.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -19,18 +21,24 @@ export class Airplane {
   @Column()
   @Max(500)
   @Min(100)
-  numOfSeats: number;
+  num_of_seats: number;
+
+  @OneToMany(() => Flight, (flight) => flight.airplane_id)
+  flights: Flight[];
+
+  @Column({ default: true })
+  is_active: boolean;
 
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
-  createdAt: Date;
+  created_at: Date;
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
-  updatedAt: Date;
+  updated_at: Date;
 }

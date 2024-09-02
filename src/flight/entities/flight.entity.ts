@@ -17,43 +17,46 @@ export class Flight {
   id: number;
 
   @Column({ type: 'enum', enum: Country, default: Country.UNKNOWN })
-  departureCountry: Country;
+  departure_country: Country;
 
   @Column({ type: 'enum', enum: Airport })
-  departureAirport: Airport;
+  departure_airport: Airport;
 
   @Column()
   @MinDate(new Date())
-  departureTime: Date;
+  departure_time: Date;
 
   @Column({ type: 'enum', enum: Country, default: Country.UNKNOWN })
-  arrivalCountry: Country;
+  arrival_country: Country;
 
   @Column({ type: 'enum', enum: Airport })
-  arrivalAirport: Airport;
+  arrival_airport: Airport;
 
   @Column()
   @MinDate(new Date())
-  arrivalTime: Date;
+  arrival_time: Date;
 
   @ManyToOne(() => Airplane, (airplane) => airplane.id)
-  airplaneId: number;
+  airplane_id: number;
 
   @Column()
   @Min(4000)
   @Max(10000)
   price: number;
 
+  @Column({ default: true })
+  is_active: boolean;
+
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
-  createdAt: Date;
+  created_at: Date;
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
-  updatedAt: Date;
+  updated_at: Date;
 }

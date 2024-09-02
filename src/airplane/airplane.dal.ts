@@ -5,6 +5,7 @@ import { Airplane } from './entities/airplane.entity';
 import { CreateAirplaneDto } from './dto/create-airplane.dto';
 import { UpdateAirplaneDto } from './dto/update-airplane.dto';
 import { Flight } from 'src/flight/entities/flight.entity';
+import { FilterAirplaneDto } from './dto/filter-airplane.dto';
 
 @Injectable()
 export class AirplaneDal {
@@ -38,30 +39,45 @@ export class AirplaneDal {
     return updateResult;
   }
 
-  async remove(airplane: Airplane) {
-    const deletedAirplane = await this.airplaneRepo.delete(airplane);
+  async remove(id: number) {
+    const results = await this.airplaneRepo.update(id, { is_active: false });
 
-    return deletedAirplane;
+    return results;
   }
 
   async checkConflictWithTheGivenTime(
     id: number,
-    departureTime: Date,
-    arrivalTime: Date,
+    departure_time: Date,
+    arrival_time: Date,
   ) {
     const existingFlight = await this.dataSource
       .createQueryBuilder()
       .select(`flight`)
       .from(Flight, 'flight')
-      .where(`flight.arrivalTime > :departureTime `, {
-        departureTime,
+      .where(`flight.arrival_time > :departure_time `, {
+        departure_time,
       })
-      .andWhere(`flight.departureTime < :arrivalTime`, {
-        arrivalTime,
+      .andWhere(`flight.departure_time < :arrival_time`, {
+        arrival_time,
       })
-      .andWhere(`flight.airplaneId = :id`, { id })
+      .andWhere(`flight.airplane_id = :id`, { id })
       .execute();
 
     return existingFlight;
+  }
+  async filterFreeAirplanes(filter: FilterAirplaneDto) {
+    const { departure_time, arrival_time } = filter;
+
+    const availableAirplanes = await this.dataSource
+      .getRepository(Airplane)
+      .createQueryBuilder('airplane')
+      .leftJoin('airplane.flights', 'flight')
+      .andWhere(
+        `flight.id IS NULL OR ((flight.departure_time > :arrival_time OR flight.arrival_time < :departure_time) AND flight.is_active = true)`,
+        { departure_time, arrival_time },
+      )
+      .getMany();
+
+    return availableAirplanes;
   }
 }

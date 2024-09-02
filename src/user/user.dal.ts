@@ -14,7 +14,9 @@ export class UserDal {
   ) {}
 
   async findByEmail(email: string) {
-    const user: User = await this.userRepo.findOne({ where: { email } });
+    const user: User = await this.userRepo.findOne({
+      where: { email, is_active: true },
+    });
 
     return user;
   }
@@ -30,8 +32,9 @@ export class UserDal {
     const user = await this.dataSource
       .getRepository(Credit)
       .createQueryBuilder('credit')
-      .leftJoinAndSelect('credit.userId', 'user')
-      .where('credit.userId = :id', { id })
+      .leftJoinAndSelect('credit.user_id', 'user')
+      .where('credit.user_id = :id', { id })
+      .andWhere('user.is_active = true')
       .getOne();
 
     return user;
@@ -43,6 +46,7 @@ export class UserDal {
       .select('user')
       .from(User, 'user')
       .where('user.id = :id', { id })
+      .andWhere('is_active = true')
       .getOne();
 
     return user;
@@ -52,21 +56,39 @@ export class UserDal {
     const users = await this.dataSource
       .getRepository(Credit)
       .createQueryBuilder('credit')
-      .leftJoinAndSelect('credit.userId', 'user')
+      .leftJoinAndSelect('credit.user_id', 'user')
+      .where('user.is_active = true')
       .getMany();
 
     return users;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const updateResult = await this.userRepo.update(id, updateUserDto);
+    const results = await this.userRepo.update(
+      { id: id, is_active: true },
+      updateUserDto,
+    );
 
-    return updateResult;
+    return results;
   }
 
-  async remove(user: User) {
-    const removedUser = await this.userRepo.remove(user);
+  async remove(id: number) {
+    const results = await this.userRepo.update(
+      { id: id, is_active: true },
+      { is_active: false },
+    );
 
-    return removedUser;
+    return results;
+  }
+
+  async passengerNumber() {
+    const passengerNumber = await this.dataSource
+      .getRepository(User)
+      .createQueryBuilder('user')
+      .where('user.is_active = true')
+      .andWhere('user.isAdmin = false')
+      .getCount();
+
+    return passengerNumber;
   }
 }

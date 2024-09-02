@@ -11,6 +11,8 @@ import { CreditModule } from 'src/credit/credit.module';
 import { UserModule } from 'src/user/user.module';
 import { HelpersModule } from 'src/helpers/helpers.module';
 import { Flight } from 'src/flight/entities/flight.entity';
+import { EmailModule } from 'src/email/email.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { Flight } from 'src/flight/entities/flight.entity';
     forwardRef(() => CreditModule),
     forwardRef(() => UserModule),
     forwardRef(() => HelpersModule),
+    EmailModule,
+    ConfigModule,
   ],
   controllers: [BookingSeatController],
   providers: [BookingSeatService, BookingSeatDal, BookingSeatHelper],

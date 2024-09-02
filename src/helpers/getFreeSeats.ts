@@ -11,16 +11,16 @@ export class GetFreeSeatsHelper {
   async getFreeSeats(flightId: number) {
     const flight = await this.bookingSeatHelper.getFlightOrThrowError(flightId);
     const airplane = await this.bookingSeatHelper.getAirplaneOrThrowError(
-      flight.airplaneId['id'],
+      flight.airplane_id['id'],
     );
     const takenSeatsArrayOfObject = await this.bookingDal.getTakenSeats(
       flight.id,
     );
     const takenSeatsArrayOfNumber = takenSeatsArrayOfObject.map(
-      (item) => item.seatNumber,
+      (item) => item.seat_number,
     );
     const freeSeats = [];
-    for (let i = 0; i < airplane.numOfSeats; i++) {
+    for (let i = 0; i < airplane.num_of_seats; i++) {
       if (!takenSeatsArrayOfNumber.includes(i)) {
         freeSeats.push(i);
       }

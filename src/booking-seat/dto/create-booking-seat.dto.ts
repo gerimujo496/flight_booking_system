@@ -1,18 +1,38 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsOptional, Max, Min } from 'class-validator';
 
 export class CreateBookingSeatDto {
+  @ApiProperty()
   @IsNumber()
-  userId: number;
+  user_id: number;
 
+  @ApiProperty()
   @IsNumber()
-  flightId: number;
+  flight_id: number;
 
+  @ApiProperty()
   @IsNumber()
-  airplaneId: number;
+  airplane_id: number;
 
+  @ApiProperty()
   @IsNumber()
   @IsOptional()
-  seatNumber: number;
+  seat_number: number | null = null;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  return_flight_id?: number | null = null;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  return_airplane_id?: number | null = null;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  return_seat_number?: number | null = null;
 
   @Min(4000)
   @Max(10000)

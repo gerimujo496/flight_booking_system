@@ -5,42 +5,50 @@ export class BookingSeatsDto {
   @Expose()
   id: number;
 
-  @Expose()
-  seatNumber: number;
-
   @Transform(({ obj }) => {
-    return obj.userId.firstName;
+    return obj.user_id.first_name;
   })
   @Expose()
-  firstName: string;
+  first_name: string;
 
   @Transform(({ obj }) => {
-    return obj.userId.lastName;
+    return obj.user_id.last_name;
   })
   @Expose()
-  lastName: string;
-
-  @Transform(({ obj }) => {
-    return obj.airplaneId.name;
-  })
-  @Expose()
-  airplane: string;
+  last_name: string;
 
   @Expose()
   price: number;
 
   @Expose()
-  isApproved: boolean;
+  is_approved: boolean;
 
   @Transform(({ obj }) => {
-    return obj.flightId;
+    return {
+      ...obj.flight_id,
+      airplane: obj.airplane_id.name,
+      seat_number: obj.seat_number,
+    };
   })
   @Expose()
   flight: Flight;
 
+  @Transform(({ obj }) => {
+    console.log(obj);
+    return obj.return_flight_id
+      ? {
+          ...obj.return_flight_id,
+          airplane: obj.airplane_id.name,
+          seat_number: obj.return_seat_number,
+        }
+      : null;
+  })
   @Expose()
-  createdAt: Date;
+  return_flight: Flight;
 
   @Expose()
-  updatedAt: Date;
+  created_at: Date;
+
+  @Expose()
+  updated_at: Date;
 }
