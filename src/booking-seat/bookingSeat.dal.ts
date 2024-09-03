@@ -4,7 +4,6 @@ import { BookingSeat } from './entities/booking-seat.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateBookingSeatDto } from './dto/create-booking-seat.dto';
 import { Credit } from 'src/credit/entities/credit.entity';
-import { query } from 'src/constants/query';
 
 @Injectable()
 export class BookingSeatDal {
@@ -30,7 +29,16 @@ export class BookingSeatDal {
       where: { seat_number, flight_id, airplane_id, is_approved: true },
     });
 
-    if (booking) return false;
+    const returnBooking = await this.bookingSeatRepo.findOne({
+      where: {
+        return_seat_number: seat_number,
+        return_flight_id: flight_id,
+        return_airplane_id: airplane_id,
+        is_approved: true,
+      },
+    });
+
+    if (booking || returnBooking) return false;
 
     return true;
   }
@@ -41,12 +49,27 @@ export class BookingSeatDal {
       .select('booking_seat.seat_number')
       .from(BookingSeat, 'booking_seat')
       .where(
-        '(booking_seat.flight_id = :flightId OR booking_seat.return_flight_id = :flightId) AND booking_seat.is_approved = true',
+        'booking_seat.flight_id = :flightId AND booking_seat.is_approved = true',
         { flightId },
       )
       .getMany();
 
-    return seats;
+    const returnFlight = await this.dataSource
+      .createQueryBuilder()
+      .select('booking_seat.return_seat_number')
+      .from(BookingSeat, 'booking_seat')
+      .where(
+        'booking_seat.return_flight_id IS NOT NULL AND booking_seat.return_flight_id = :flightId AND booking_seat.is_approved = true',
+        { flightId },
+      )
+      .getMany();
+
+    const returnFlightSeats = returnFlight.map((item) => {
+      return { seat_number: item.return_seat_number };
+    });
+
+    const allBookings = [...seats, ...returnFlightSeats];
+    return allBookings;
   }
 
   async findAllJoinColumns() {
@@ -86,12 +109,28 @@ export class BookingSeatDal {
       .getRepository(BookingSeat)
       .createQueryBuilder('booking_seat')
       .leftJoinAndSelect('booking_seat.user_id', 'credit')
+      .leftJoinAndSelect('booking_seat.user_id', 'user')
+      .leftJoinAndSelect('booking_seat.airplane_id', 'airplane')
+      .leftJoinAndSelect('booking_seat.flight_id', 'flight')
       .where('booking_seat.seat_number = :seat_number', { seat_number })
-      .andWhere('booking_seat.flightIdId = :flight_id', { flight_id })
+      .andWhere('booking_seat.flight_id = :flight_id', { flight_id })
+      .andWhere('booking_seat.is_approved IS NULL')
       .andWhere('booking_seat.id != :booking_id', { booking_id })
       .getMany();
 
-    return bookings;
+    const returnFlightBookings = await this.dataSource
+      .getRepository(BookingSeat)
+      .createQueryBuilder('booking_seat')
+      .leftJoinAndSelect('booking_seat.user_id', 'credit')
+      .where('booking_seat.return_seat_number = :seat_number', { seat_number })
+      .andWhere('booking_seat.is_approved IS NULL')
+      .andWhere('booking_seat.return_flight_id = :flight_id', { flight_id })
+      .andWhere('booking_seat.id != :booking_id', { booking_id })
+      .getMany();
+
+    const allBookings = [...bookings, ...returnFlightBookings];
+
+    return allBookings;
   }
 
   async approveBooking(id: number) {
@@ -123,6 +162,19 @@ export class BookingSeatDal {
       .andWhere('id != :booking_id', { booking_id })
       .execute();
 
+    await this.dataSource
+      .getRepository(BookingSeat)
+      .createQueryBuilder('booking_seat')
+      .leftJoinAndSelect('booking_seat.user_id', 'user')
+      .leftJoinAndSelect('booking_seat.airplane_id', 'airplane')
+      .leftJoinAndSelect('booking_seat.flight_id', 'flight')
+      .update(BookingSeat)
+      .set({ is_approved: false })
+      .where(`return_seat_number = :seat_number`, { seat_number })
+      .andWhere('return_flight_id = :flight_id', { flight_id })
+      .andWhere('id != :booking_id', { booking_id })
+      .execute();
+
     return bookings;
   }
 
@@ -130,9 +182,6 @@ export class BookingSeatDal {
     const updateResults = await this.dataSource
       .getRepository(BookingSeat)
       .createQueryBuilder('booking_seat')
-      //   .leftJoinAndSelect('booking_seat.user_id', 'user')
-      //   .leftJoinAndSelect('booking_seat.airplane_id', 'airplane')
-      //   .leftJoinAndSelect('booking_seat.flight_id', 'flight')
       .update(BookingSeat)
       .set({ is_approved: false })
       .where(`id = :id`, { id })
@@ -179,7 +228,18 @@ export class BookingSeatDal {
       .where('booking_seat.flight_id = :flightId', { flightId })
       .getMany();
 
-    return bookings;
+    const returnFlightBooking = await this.dataSource
+      .getRepository(BookingSeat)
+      .createQueryBuilder('booking_seat')
+      .leftJoinAndSelect('booking_seat.user_id', 'user')
+      .leftJoinAndSelect('booking_seat.airplane_id', 'airplane')
+      .leftJoinAndSelect('booking_seat.flight_id', 'flight')
+      .where('booking_seat.return_flight_id = :flightId', { flightId })
+      .getMany();
+
+    const allBookings = [...bookings, ...returnFlightBooking] as BookingSeat[];
+
+    return allBookings;
   }
 
   async rejectBookingsRelatedToFlight(flightId: number) {
@@ -189,6 +249,14 @@ export class BookingSeatDal {
       .update(BookingSeat)
       .set({ is_approved: false })
       .where(`flight_id = :flightId`, { flightId })
+      .execute();
+
+    await this.dataSource
+      .getRepository(BookingSeat)
+      .createQueryBuilder('booking_seat')
+      .update(BookingSeat)
+      .set({ is_approved: false })
+      .where(`return_flight_id = :flightId`, { flightId })
       .execute();
 
     return updateResults;

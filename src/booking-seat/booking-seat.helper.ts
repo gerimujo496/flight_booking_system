@@ -5,6 +5,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import * as PdfPrinter from 'pdfmake';
+
 import { AirplaneDal } from 'src/airplane/airplane.dal';
 import { FlightDal } from 'src/flight/flight.dal';
 import { BookingSeatDal } from './bookingSeat.dal';
@@ -12,12 +14,7 @@ import { errorMessage } from 'src/constants/errorMessages';
 import { CreateBookingSeatDto } from './dto/create-booking-seat.dto';
 import { CreditDal } from 'src/credit/credit.dal';
 import { UserDal } from 'src/user/user.dal';
-
 import { BookingSeat } from './entities/booking-seat.entity';
-import * as PdfPrinter from 'pdfmake';
-import { createWriteStream } from 'fs';
-import { BookingSeatsDto } from './dto/seats.dto';
-import { GetFreeSeatsHelper } from 'src/helpers/getFreeSeats';
 
 @Injectable()
 export class BookingSeatHelper {
@@ -133,7 +130,7 @@ export class BookingSeatHelper {
     } else {
       if (seat_number) totalPrice += 3000;
     }
-    console.log(price, totalPrice, flightData);
+
     return totalPrice;
   }
 

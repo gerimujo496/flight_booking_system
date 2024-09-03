@@ -46,10 +46,11 @@ async function truncate(dataSource: DataSource) {
   await dataSource.query('TRUNCATE "booking_seat" RESTART IDENTITY CASCADE;');
   await dataSource.query('TRUNCATE "flight" RESTART IDENTITY CASCADE;');
   await dataSource.query('TRUNCATE "airplane" RESTART IDENTITY CASCADE;');
+  await dataSource.query('TRUNCATE "user" RESTART IDENTITY CASCADE;');
 }
 
 export async function seedData(dataSource: DataSource) {
-  truncate(dataSource);
+  await truncate(dataSource);
 
   const repository = dataSource.getRepository(Airplane);
   const flightRepository = dataSource.getRepository(Flight);

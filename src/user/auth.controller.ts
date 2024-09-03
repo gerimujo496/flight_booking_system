@@ -6,6 +6,8 @@ import {
   UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
 import { CreateUserDto, CreateUserSchema } from './dto/create-user.dto';
 import { AuthService } from './auth.service';
 import { SerializerInterceptor } from 'src/iterceptors/serialize.interceptors';
@@ -14,7 +16,6 @@ import { SignInDto, SignInSchema } from './dto/signIn-user.dto';
 import { controller } from 'src/constants/controller';
 import { controller_path } from 'src/constants/controllerPath';
 import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags(controller.AUTH)
 @Controller(controller.AUTH)

@@ -12,6 +12,8 @@ import {
   UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
+
 import { FlightService } from './flight.service';
 import { CreateFlightDto, CreateFlightSchema } from './dto/create-flight.dto';
 import { UpdateFlightDto, UpdateFlightSchema } from './dto/update-flight.dto';
@@ -19,14 +21,12 @@ import { AdminGuard } from 'src/guards/admin.guard';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { FilterFlightDto } from './dto/filter-flight.dto';
 import { CurrentUser } from 'src/decorators/current-user-decorator';
-import { User } from 'src/user/entities/user.entity';
 import { controller } from 'src/constants/controller';
 import { controller_path } from 'src/constants/controllerPath';
 import { SerializerInterceptor } from 'src/iterceptors/serialize.interceptors';
 import { FreeSeatsDto } from 'src/booking-seat/dto/get-freeSeats.dto';
 import { BookingSeatService } from 'src/booking-seat/booking-seat.service';
 import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Country } from 'src/types/country';
 
 @ApiTags(controller.FLIGHT)
@@ -63,7 +63,7 @@ export class FlightController {
   @ApiQuery({ name: 'arrival_country', enum: Country, required: false })
   @ApiQuery({ name: 'departure_country', enum: Country, required: false })
   @Get(controller_path.FLIGHT.FILTER)
-  async filter(@Query() filter: FilterFlightDto, @CurrentUser() user: User) {
+  async filter(@Query() filter: FilterFlightDto, @CurrentUser() user: any) {
     return await this.flightService.filter(filter, user);
   }
 

@@ -9,9 +9,9 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 import { Country } from '../../types/country';
-import { ApiProperty } from '@nestjs/swagger';
 
 export const CreateUserSchema = z.object({
   first_name: z.string().max(20, 'First name must be at most 20 characters'),

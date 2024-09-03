@@ -1,6 +1,18 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsOptional } from 'class-validator';
 import { Country } from 'src/types/country';
+import { z } from 'zod';
+
+export const FilterFlightSchema = z.object({
+  departure_time: z
+    .date()
+    .refine((date) => date > new Date(), {
+      message: 'Departure time must be in the future',
+    })
+    .optional(),
+  arrival_country: z.nativeEnum(Country).optional(),
+  departure_country: z.nativeEnum(Country).optional(),
+});
 
 export class FilterFlightDto {
   @IsOptional()
@@ -15,13 +27,3 @@ export class FilterFlightDto {
   @IsEnum(Country)
   departure_country: Country;
 }
-// import { z } from 'zod';
-// import { Country } from 'src/types/country';
-
-// export const FilterFlightSchema = z.object({
-//   departure_time: z.date().optional(),
-//   arrival_country: z.nativeEnum(Country).optional(),
-//   departure_country: z.nativeEnum(Country).optional(),
-// });
-
-// export type FilterFlightDto = z.infer<typeof FilterFlightSchema>;

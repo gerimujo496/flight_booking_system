@@ -4,13 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import { CreateFlightDto } from './dto/create-flight.dto';
 import { UpdateFlightDto } from './dto/update-flight.dto';
 import { AirplaneService } from 'src/airplane/airplane.service';
-import { DataSource } from 'typeorm';
 import { errorMessage } from 'src/constants/errorMessages';
 import { throwError } from 'src/helpers/throwError';
-import { AirplaneDal } from 'src/airplane/airplane.dal';
 import { FlightDal } from './flight.dal';
 import { FilterFlightDto } from './dto/filter-flight.dto';
 import { User } from 'src/user/entities/user.entity';
@@ -21,8 +20,6 @@ import { FlightHelper } from './flight.helper';
 export class FlightService {
   constructor(
     private airplaneService: AirplaneService,
-    private dataSource: DataSource,
-    private airplaneDal: AirplaneDal,
     private flightDal: FlightDal,
     private bookingSeatHelper: BookingSeatHelper,
     private flightHelper: FlightHelper,
@@ -32,11 +29,7 @@ export class FlightService {
     try {
       const { departure_time, arrival_time, airplane_id } = createFlightDto;
 
-      const airplane = await this.airplaneDal.findOneById(airplane_id);
-      if (!airplane)
-        throw new NotFoundException(
-          errorMessage.NOT_FOUND(`airplane`, `id`, `${airplane_id}`),
-        );
+      await this.bookingSeatHelper.getAirplaneOrThrowError(airplane_id);
 
       const isAirplaneFreeAtThisTime =
         await this.airplaneService.isFreeAtThisTime(
@@ -60,7 +53,10 @@ export class FlightService {
       if (error instanceof NotFoundException)
         return throwError(HttpStatus.NOT_FOUND, error.message);
 
-      throwError(HttpStatus.INTERNAL_SERVER_ERROR, error.message);
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(`creating`, `flight`),
+      );
     }
   }
 
@@ -72,19 +68,14 @@ export class FlightService {
     } catch (error) {
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`get`, 'flights'),
+        errorMessage.INTERNAL_SERVER_ERROR(`get`, 'all flights'),
       );
     }
   }
 
   async findOneById(id: number) {
     try {
-      const flight = await this.flightDal.findOneById(id);
-      if (!flight) {
-        throw new NotFoundException(
-          errorMessage.NOT_FOUND(`flight`, `id`, `${id}`),
-        );
-      }
+      const flight = this.bookingSeatHelper.getFlightOrThrowError(id);
 
       return flight;
     } catch (error) {
@@ -115,7 +106,7 @@ export class FlightService {
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`get`, 'flight'),
+        errorMessage.INTERNAL_SERVER_ERROR(`update`, 'flight'),
       );
     }
   }
@@ -128,7 +119,7 @@ export class FlightService {
     } catch (error) {
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`get`, 'flight'),
+        errorMessage.INTERNAL_SERVER_ERROR(`get`, 'upcoming flights'),
       );
     }
   }

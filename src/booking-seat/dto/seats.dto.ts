@@ -34,7 +34,6 @@ export class BookingSeatsDto {
   flight: Flight;
 
   @Transform(({ obj }) => {
-    console.log(obj);
     return obj.return_flight_id
       ? {
           ...obj.return_flight_id,

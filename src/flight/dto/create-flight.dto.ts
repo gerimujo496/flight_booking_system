@@ -28,12 +28,16 @@ export const CreateFlightSchema = z
     arrival_time: z.date().refine((date) => date > new Date(), {
       message: 'Arrival time must be in the future',
     }),
+
     airplane_id: z.number(),
     price: z.number().min(4000).max(10000),
   })
   .refine((data) => data.departure_airport !== data.arrival_airport, {
     message: 'Departure and arrival airports cannot be the same',
     path: ['arrival_airport'],
+  })
+  .refine((data) => data['departure_time'] < data['arrival_time'], {
+    message: `Arrival time should be after departure time`,
   });
 
 export class CreateFlightDto {

@@ -8,7 +8,7 @@ import { User } from 'src/user/entities/user.entity';
 import { GetFreeSeatsHelper } from './getFreeSeats';
 import { BookingSeat } from 'src/booking-seat/entities/booking-seat.entity';
 import { BookingSeatModule } from 'src/booking-seat/booking-seat.module';
-// forwardRef(() => BookingSeatModule
+
 @Module({
   imports: [
     forwardRef(() => CreditModule),

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Flight } from './entities/flight.entity';
 import { DataSource, Repository } from 'typeorm';
+
+import { Flight } from './entities/flight.entity';
 import { CreateFlightDto } from './dto/create-flight.dto';
 import { UpdateFlightDto } from './dto/update-flight.dto';
 import { FilterFlightDto } from './dto/filter-flight.dto';
@@ -61,8 +62,7 @@ export class FlightDal {
 
   async filter(filter: FilterFlightDto) {
     const { departure_time, departure_country, arrival_country } = filter;
-
-    const query = await this.dataSource
+    const query = this.dataSource
       .createQueryBuilder()
       .select('flight')
       .from(Flight, 'flight')

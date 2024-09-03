@@ -20,9 +20,12 @@ import { UpdateAirplaneDto } from './dto/update-airplane.dto';
 import { AdminGuard } from 'src/guards/admin.guard';
 import { controller } from 'src/constants/controller';
 import { controller_path } from 'src/constants/controllerPath';
-import { FilterAirplaneDto } from './dto/filter-airplane.dto';
+import {
+  FilterAirplaneDto,
+  FilterAirplaneSchema,
+} from './dto/filter-airplane.dto';
 import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @Controller(controller.AIRPLANE)
 @ApiTags(controller.AIRPLANE)
@@ -36,6 +39,17 @@ export class AirplaneController {
     return await this.airplaneService.create(createAirplaneDto);
   }
 
+  @ApiQuery({
+    name: 'arrival_time',
+    type: 'string',
+    required: true,
+  })
+  @ApiQuery({
+    name: 'departure_time',
+    type: 'string',
+    required: true,
+  })
+  @UsePipes(new ZodValidationPipe(FilterAirplaneSchema))
   @Get(controller_path.AIRPLANE.AVAILABLE_AIRPLANES)
   async filterAirplanes(@Query() filter: FilterAirplaneDto) {
     return await this.airplaneService.filterAirplanes(filter);

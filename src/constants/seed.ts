@@ -1,6 +1,4 @@
-import { ApiOkResponse } from '@nestjs/swagger';
 import { CreateAirplaneDto } from 'src/airplane/dto/create-airplane.dto';
-import { Airplane } from 'src/airplane/entities/airplane.entity';
 import { CreateFlightDto } from 'src/flight/dto/create-flight.dto';
 import { Airport } from 'src/types/airports';
 import { Country } from 'src/types/country';

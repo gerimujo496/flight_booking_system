@@ -23,7 +23,6 @@ export class EmailService {
   async sendApprovedBooking(
     recipient: string,
     booking: BookingSeat,
-    pdfBuffer: Buffer,
   ): Promise<void> {
     const mail: MailDataRequired = {
       to: recipient,
@@ -46,14 +45,6 @@ export class EmailService {
         seatNumber: booking.seat_number,
         price: `${booking.price} $`,
       },
-      attachments: [
-        {
-          content: pdfBuffer.toString('base64'),
-          filename: 'ticket.pdf',
-          type: 'application/pdf',
-          disposition: 'attachment',
-        },
-      ],
     };
     await this.sendGridClient.send(mail);
   }

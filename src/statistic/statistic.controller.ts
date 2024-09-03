@@ -1,4 +1,5 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import { controller } from 'src/constants/controller';
 import { controller_path } from 'src/constants/controllerPath';
@@ -6,7 +7,6 @@ import { FlightService } from 'src/flight/flight.service';
 import { AdminGuard } from 'src/guards/admin.guard';
 import { BookingSeatService } from 'src/booking-seat/booking-seat.service';
 import { UserService } from 'src/user/user.service';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags(controller.STATISTIC)
 @Controller(controller.STATISTIC)
@@ -38,7 +38,7 @@ export class StatisticController {
     return await this.bookingSeatService.topThreeClientsWhoHaveBookedMore();
   }
 
-  @Get(controller_path.STATISTIC.TOP_3_CLIENTS_WHO_HAVE_SPEND_MORE)
+  @Get(controller_path.STATISTIC.TOP_3_CLIENTS_WHO_HAVE_SPENT_MORE)
   async top3ClientsWHoHaveSpentMore() {
     return await this.bookingSeatService.topThreeClientsWhoHaveSpentMore();
   }

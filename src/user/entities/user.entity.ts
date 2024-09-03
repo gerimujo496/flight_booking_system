@@ -5,8 +5,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Country } from '../../types/country';
 import { Length } from 'class-validator';
+
+import { Country } from '../../types/country';
 
 @Entity()
 export class User {

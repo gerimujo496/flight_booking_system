@@ -6,6 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import { CreateBookingSeatDto } from './dto/create-booking-seat.dto';
 import { AirplaneDal } from 'src/airplane/airplane.dal';
 import { FlightDal } from 'src/flight/flight.dal';
@@ -15,7 +16,6 @@ import { BookingSeatDal } from './bookingSeat.dal';
 import { BookingSeatHelper } from './booking-seat.helper';
 import { RemoveCredit } from 'src/helpers/removeCredits';
 import { GetFreeSeatsHelper } from 'src/helpers/getFreeSeats';
-import { ConfigService } from '@nestjs/config';
 import { EmailService } from 'src/email/email.service';
 
 @Injectable()
@@ -62,8 +62,11 @@ export class BookingSeatService {
 
       if (error instanceof BadRequestException)
         throwError(HttpStatus.BAD_REQUEST, error.message);
-      // errorMessage.INTERNAL_SERVER_ERROR(`create`, `booking `)
-      throwError(HttpStatus.BAD_REQUEST, error.message);
+
+      throwError(
+        HttpStatus.BAD_REQUEST,
+        errorMessage.INTERNAL_SERVER_ERROR(`create`, `booking `),
+      );
     }
   }
 
@@ -171,54 +174,7 @@ export class BookingSeatService {
 
     return randomSeat;
   }
-  // async bookPreferredSeat(createBookingSeatDto: CreateBookingSeatDto) {
-  //   try {
-  //     const { user_id, flight_id, seat_number } = createBookingSeatDto;
 
-  //     if (!seat_number)
-  //       throw new BadRequestException(errorMessage.SEAT_NUMBER_REQUIRED);
-
-  //     await this.bookingSeatHelper.arePropertiesValidAndCompatibleOrThrowError(
-  //       createBookingSeatDto,
-  //     );
-
-  //     const newPrice =
-  //       await this.bookingSeatHelper.newPriceOfPreferredBookingSeat(flight_id);
-
-  //     await this.bookingSeatHelper.throwErrorIfCreditsAreNotEnough(
-  //       user_id,
-  //       newPrice,
-  //     );
-
-  //     const newSeatBookingDto = {
-  //       ...createBookingSeatDto,
-  //       price: newPrice,
-  //     } as CreateBookingSeatDto;
-
-  //     await this.removeCredit.removeCredits(user_id, newPrice);
-
-  //     const bookingSeat = await this.bookingDal.create(newSeatBookingDto);
-
-  //     const bookingSeatJoinedWithColumns =
-  //       await this.bookingDal.findOneByIdJoinColumns(bookingSeat.id);
-
-  //     return bookingSeatJoinedWithColumns;
-  //   } catch (error) {
-  //     if (error instanceof ForbiddenException)
-  //       throwError(HttpStatus.FORBIDDEN, error.message);
-
-  //     if (error instanceof NotFoundException)
-  //       throwError(HttpStatus.NOT_FOUND, error.message);
-
-  //     if (error instanceof ConflictException)
-  //       throwError(HttpStatus.CONFLICT, error.message);
-
-  //     if (error instanceof BadRequestException)
-  //       throwError(HttpStatus.BAD_REQUEST, error.message);
-  //     // errorMessage.INTERNAL_SERVER_ERROR(`create`, `booking `)
-  //     throwError(HttpStatus.BAD_REQUEST, error.message);
-  //   }
-  // }
   async getFreeSeats(flightId: number) {
     try {
       return await this.freeSeatsHelper.getFreeSeats(flightId);
@@ -230,59 +186,6 @@ export class BookingSeatService {
     }
   }
 
-  async bookRandomSeat(createBookingSeatDto: CreateBookingSeatDto) {
-    try {
-      const { user_id, flight_id } = createBookingSeatDto;
-      const { listOfFreeSeats } =
-        await this.freeSeatsHelper.getFreeSeats(flight_id);
-
-      const randomSeat =
-        listOfFreeSeats[Math.floor(Math.random() * listOfFreeSeats.length)];
-
-      const newSeatBookingDto = {
-        ...createBookingSeatDto,
-        seatNumber: randomSeat,
-      } as CreateBookingSeatDto;
-
-      await this.bookingSeatHelper.arePropertiesValidAndCompatibleOrThrowError(
-        newSeatBookingDto,
-      );
-
-      const { price } = await this.flightDal.findOneById(flight_id);
-      newSeatBookingDto.price = price;
-
-      await this.bookingSeatHelper.throwErrorIfCreditsAreNotEnough(
-        user_id,
-        price,
-      );
-
-      await this.removeCredit.removeCredits(user_id, price);
-
-      const bookingSeat = await this.bookingDal.create(newSeatBookingDto);
-
-      const bookingSeatJoinedWithColumns =
-        await this.bookingDal.findOneByIdJoinColumns(bookingSeat.id);
-
-      return bookingSeatJoinedWithColumns;
-    } catch (error) {
-      if (error instanceof ForbiddenException)
-        throwError(HttpStatus.FORBIDDEN, error.message);
-
-      if (error instanceof NotFoundException)
-        throwError(HttpStatus.NOT_FOUND, error.message);
-
-      if (error instanceof ConflictException)
-        throwError(HttpStatus.CONFLICT, error.message);
-
-      if (error instanceof BadRequestException)
-        throwError(HttpStatus.BAD_REQUEST, error.message);
-
-      throwError(
-        HttpStatus.BAD_REQUEST,
-        errorMessage.INTERNAL_SERVER_ERROR(`create`, `booking `),
-      );
-    }
-  }
   async findAll() {
     try {
       const allBookings = await this.bookingDal.findAllJoinColumns();
@@ -312,6 +215,7 @@ export class BookingSeatService {
       throwError(HttpStatus.INTERNAL_SERVER_ERROR, error.message);
     }
   }
+
   async approveBooking(id: number) {
     try {
       const booking =
@@ -348,14 +252,17 @@ export class BookingSeatService {
         booking.id,
       );
 
-      const pdfBuffer =
-        await this.bookingSeatHelper.generateTicketPdf(approvedBooking);
-
       await this.emailService.sendApprovedBooking(
-        'geri.mujo@hotmail.com',
+        booking.user_id['email'],
         booking,
-        pdfBuffer,
       );
+
+      for (const booking of bookingsWithSameSeatNumberForFlight) {
+        await this.emailService.sendRejectedBooking(
+          booking.user_id['email'],
+          booking,
+        );
+      }
 
       return approvedBooking;
     } catch (error) {
@@ -395,12 +302,11 @@ export class BookingSeatService {
       );
     }
   }
+
   async rejectBooking(id: number) {
     try {
       const booking =
-        await await this.bookingSeatHelper.getBookingOrThrowErrorIfItDoNotExists(
-          id,
-        );
+        await this.bookingSeatHelper.getBookingOrThrowErrorIfItDoNotExists(id);
 
       if (booking.is_approved == false)
         throw new ConflictException(errorMessage.BOOKING_CONFLICT('rejected'));
@@ -420,7 +326,7 @@ export class BookingSeatService {
       const rejectedBooking = await this.bookingDal.findOneByIdJoinColumns(id);
       if (!rejectedBooking.is_approved)
         await this.emailService.sendRejectedBooking(
-          'geri.mujo@hotmail.com',
+          rejectedBooking.user_id['email'],
           rejectedBooking,
         );
 
@@ -462,13 +368,20 @@ export class BookingSeatService {
       );
     }
   }
+
   async topThreeClientsWhoHaveSpentMore() {
     try {
       const clients = await this.bookingDal.topThreeClientsWhoHaveSpendMore();
 
       return clients;
     } catch (error) {
-      throwError(HttpStatus.INTERNAL_SERVER_ERROR, error.message);
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(
+          `get`,
+          `top 3 clients who have spent more`,
+        ),
+      );
     }
   }
   async topThreeClientsWhoHaveBookedMore() {
@@ -477,7 +390,13 @@ export class BookingSeatService {
 
       return clients;
     } catch (error) {
-      throwError(HttpStatus.INTERNAL_SERVER_ERROR, error.message);
+      throwError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage.INTERNAL_SERVER_ERROR(
+          `get`,
+          `top 3 clients who have booked more`,
+        ),
+      );
     }
   }
 }

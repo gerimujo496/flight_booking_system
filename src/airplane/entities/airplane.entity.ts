@@ -1,5 +1,4 @@
 import { Length, Max, Min } from 'class-validator';
-import { Flight } from 'src/flight/entities/flight.entity';
 import {
   Column,
   CreateDateColumn,
@@ -8,6 +7,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { Flight } from 'src/flight/entities/flight.entity';
 
 @Entity()
 export class Airplane {

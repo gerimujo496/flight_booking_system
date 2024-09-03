@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import { CreateCreditDto } from './dto/create-credit.dto';
 import { UpdateCreditDto } from './dto/update-credit.dto';
 import { errorMessage } from 'src/constants/errorMessages';
@@ -63,7 +64,7 @@ export class CreditService {
 
       throwError(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR(`find`, `credit`),
+        errorMessage.INTERNAL_SERVER_ERROR(`remove`, `credit`),
       );
     }
   }

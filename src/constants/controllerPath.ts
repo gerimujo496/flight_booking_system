@@ -39,7 +39,7 @@ export const controller_path = {
     TOTAL_REVENUE: 'total_revenue',
     NUMBER_OF_FLIGHTS: 'flight_number',
     PASSENGER_NUMBER: 'passenger_number',
-    TOP_3_CLIENTS_WHO_HAVE_SPEND_MORE: 'top_3_more_spent_clients',
+    TOP_3_CLIENTS_WHO_HAVE_SPENT_MORE: 'top_3_more_spent_clients',
     TOP_3_CLIENTS_WHO_HAVE_BOOKED_MORE: 'top_3_more_booked_clients',
   },
 };
