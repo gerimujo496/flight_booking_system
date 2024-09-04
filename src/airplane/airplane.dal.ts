@@ -28,7 +28,9 @@ export class AirplaneDal {
   }
 
   async findOneById(id: number) {
-    const airplane = await this.airplaneRepo.findOne({ where: { id } });
+    const airplane = await this.airplaneRepo.findOne({
+      where: { id, is_active: true },
+    });
 
     return airplane;
   }
