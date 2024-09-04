@@ -1,6 +1,26 @@
-import { z } from 'zod';
-import { CreateAirplaneSchema } from './create-airplane.dto';
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
-export const UpdateAirplaneSchema = CreateAirplaneSchema.partial();
+export class UpdateAirplaneDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsString({ message: 'Name must be a string' })
+  @MaxLength(20, { message: 'Name must not exceed 20 characters' })
+  name: string;
 
-export type UpdateAirplaneDto = z.infer<typeof UpdateAirplaneSchema>;
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber({}, { message: 'Number of seats must be a number' })
+  @Min(100, { message: 'Number of seats must be at least 100' })
+  @Max(500, { message: 'Number of seats must not exceed 500' })
+  @Type(() => Number)
+  num_of_seats: number;
+}

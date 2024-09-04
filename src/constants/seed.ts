@@ -127,10 +127,10 @@ export const flightSeed: CreateFlightDto[] = [
     price: 7000,
   },
   {
-    departure_country: Country.UNKNOWN,
+    departure_country: Country.GERMANY,
     departure_airport: Airport.FRANKFURT,
     departure_time: new Date('2024-09-20T13:00:00.000Z'),
-    arrival_country: Country.UNKNOWN,
+    arrival_country: Country.ARGENTINA,
     arrival_airport: Airport.CHARLES_DE_GAULLE,
     arrival_time: new Date('2024-09-20T15:30:00.000Z'),
     airplane_id: 5,
